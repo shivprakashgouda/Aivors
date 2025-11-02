@@ -30,7 +30,7 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
   const [otpValue, setOtpValue] = useState("");
   const [otpTimer, setOtpTimer] = useState(0);
   
-  const { login } = useAuth();
+  const { login, setUserFromVerification } = useAuth();
   const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -91,6 +91,11 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
         email: verificationEmail,
         otp: otp,
       });
+
+      // Set user in context after successful verification
+      if (response.user) {
+        setUserFromVerification(response.user);
+      }
 
       toast.success("Email verified successfully!");
       

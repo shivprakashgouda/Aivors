@@ -26,9 +26,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setUserFromVerification: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,9 +69,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(data.user);
   };
 
-  const signup = async (name: string, email: string, password: string) => {
-    const data = await authAPI.signup({ name, email, password });
-    setUser(data.user);
+  const setUserFromVerification = (userData: User) => {
+    setUser(userData);
   };
 
   const logout = async () => {
@@ -85,9 +84,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
     login,
-    signup,
     logout,
     refreshUser,
+    setUserFromVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

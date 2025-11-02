@@ -158,8 +158,23 @@ export const subscriptionAPI = {
 
 // Demo API
 export const demoAPI = {
-  bookDemo: async (data: { fullName: string; phone: string; email: string; businessName: string; timeSlot?: string; additionalInfo?: string }) => {
-    const response = await api.post('/api/demo/book', data);
+  bookDemo: async (data: {
+    fullName: string;
+    phone: string;
+    email: string;
+    businessName: string;
+    timeSlot?: string;
+    additionalInfo?: string;
+  }) => {
+    const response = await apiClient.post('/api/demo/book', data);
+    return response.data;
+  },
+  verifyOTP: async (email: string, otp: string) => {
+    const response = await apiClient.post('/api/demo/verify-otp', { email, otp });
+    return response.data;
+  },
+  resendOTP: async (email: string) => {
+    const response = await apiClient.post('/api/demo/resend-otp', { email });
     return response.data;
   },
 };
