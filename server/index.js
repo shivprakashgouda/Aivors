@@ -49,7 +49,7 @@ app.use(helmet({
 }));
 // CORS with allowed origins list (supports Vite defaults)
 const defaultClient = process.env.CLIENT_URL || 'http://localhost:8080';
-const allowed = (process.env.CORS_ORIGINS || `${defaultClient},https://www.aivors.com/,https://aivors-1.onrender.com,https://aivors-5hvj.onrender.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`)
+const allowed = (process.env.CORS_ORIGINS || `${defaultClient},https://www.aivors.com,https://aivors-1.onrender.com,https://aivors-5hvj.onrender.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`)
   .split(',')
   .map(origin => origin.trim());
 app.use(cors({
