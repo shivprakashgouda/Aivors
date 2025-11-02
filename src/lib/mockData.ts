@@ -51,7 +51,7 @@ export const generateMockUsers = (count: number = 10): User[] => {
     return {
       id: `user_${i + 1}`,
       name: names[i] || `User ${i + 1}`,
-      email: names[i]?.toLowerCase().replace(" ", ".") + "@restaurant.com" || `user${i + 1}@restaurant.com`,
+      email: names[i]?.toLowerCase().replace(" ", ".") + "@business.com" || `user${i + 1}@business.com`,
       plan,
       credits,
       maxCredits,
@@ -257,7 +257,7 @@ export const initializeMockUser = (): User => {
   const mockUser: User = {
     id: "user_demo",
     name: "Tanmay Bari",
-    email: "tanmay@restaurant.com",
+    email: "tanmay@business.com",
     plan: "Pro",
     credits: 342,
     maxCredits: 500,

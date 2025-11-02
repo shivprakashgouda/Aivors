@@ -24,12 +24,12 @@ const features = [
   {
     icon: Utensils,
     title: "Plug Into Your POS",
-    description: "With 45+ POS integrations, RestaurantAI sends every order straight to your system—no manual input, no missed steps, and you'll never hear the phone ring again.",
+    description: "With 45+ POS integrations, businessAI sends every order straight to your system—no manual input, no missed steps, and you'll never hear the phone ring again.",
   },
   {
     icon: Settings,
     title: "Your next superhuman employee",
-    description: "Trained to talk like your best employee. Built to work like ten. RestaurantAI handles your phones with speed, memory, and perfect accuracy—24/7.",
+    description: "Trained to talk like your best employee. Built to work like ten. businessAI handles your phones with speed, memory, and perfect accuracy—24/7.",
   },
 ];
 
@@ -39,10 +39,10 @@ export const FeaturesSection = () => {
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            Unlock the <span className="text-primary">profits</span> in your restaurant's operations
+            Unlock the <span className="text-primary">profits</span> in your business's operations
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            With RestaurantAI your staff can focus their time and energy on in-person customers, while never having to worry about the phone ringing again.
+            With businessAI your staff can focus their time and energy on in-person customers, while never having to worry about the phone ringing again.
           </p>
         </div>
         

@@ -12,10 +12,10 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              Revolutionise Your Restaurant's Communication with AI
+              Revolutionise Your business's Communication with AI
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              RestaurantAI helps the average restaurant recover 6-figures per year in lost revenue by ensuring every call is answered through AI — instantly, intelligently, and around the clock.
+              businessAI helps the average business recover 6-figures per year in lost revenue by ensuring every call is answered through AI — instantly, intelligently, and around the clock.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button
@@ -45,7 +45,7 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
                     <Star key={i} className="w-5 h-5 fill-primary text-primary" />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">Trusted by 500+ restaurants</span>
+                <span className="text-sm text-muted-foreground">Trusted by 500+ businesss</span>
               </div>
             </div>
           </div>
@@ -53,7 +53,7 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
             <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-gradient-to-br from-card to-muted shadow-2xl">
               <img
                 src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop"
-                alt="Elegant restaurant interior"
+                alt="Elegant business interior"
                 className="w-full h-full object-cover"
               />
             </div>

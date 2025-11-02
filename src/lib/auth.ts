@@ -111,8 +111,8 @@ export const generateMockActivities = (count: number = 10): Activity[] => {
 export const createMockBusiness = (userId: string, isFirstBusiness: boolean = true): Business => {
   return {
     id: `business_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    name: isFirstBusiness ? "My Restaurant" : "Second Location",
-    type: "Restaurant",
+    name: isFirstBusiness ? "My business" : "Second Location",
+    type: "business",
     phoneNumber: isFirstBusiness ? "+1 (555) 123-4567" : "+1 (555) 987-6543",
     address: isFirstBusiness ? "123 Main St, City, State" : "456 Oak Ave, City, State",
     setupComplete: isFirstBusiness,

@@ -18,7 +18,7 @@ export const Footer = ({ onBookDemoClick }: FooterProps) => {
               <span className="text-xl font-bold">Aivors</span>
             </div>
             <p className="text-muted-foreground">
-              Revolutionizing restaurant communication with AI-powered phone management.
+              Revolutionizing business communication with AI-powered phone management.
             </p>
             <div className="text-muted-foreground text-sm space-y-1">
               <p>5900 Balcones Dr, Ste 100</p>
@@ -30,8 +30,8 @@ export const Footer = ({ onBookDemoClick }: FooterProps) => {
             <h3 className="font-bold mb-4">CONTACT</h3>
             <div className="space-y-2 text-muted-foreground">
               <p>Phone: (409) 960-2907</p>
-              <p>Support: info@restaurant-ai.com</p>
-              <p>Looking to invest: invest@restaurant-ai.com</p>
+              <p>Support: info@business-ai.com</p>
+              <p>Looking to invest: invest@business-ai.com</p>
             </div>
           </div>
 

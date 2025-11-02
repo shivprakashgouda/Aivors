@@ -142,7 +142,7 @@ const BusinessDashboard = () => {
   const handleAddBusiness = () => {
     const newBusiness = authService.addBusiness({
       name: "New Business",
-      type: "Restaurant",
+      type: "business",
     });
     setUser(authService.getCurrentUser());
     setBusiness(authService.getActiveBusiness());
