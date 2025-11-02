@@ -132,7 +132,22 @@ app.use('/api/demo', demoRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    mongodb: require('mongoose').connection.readyState === 1 ? 'connected' : 'disconnected',
+    email: process.env.EMAIL_SERVICE ? 'configured' : 'not configured'
+  });
+});
+
+// Root endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Create Stripe Checkout Session
