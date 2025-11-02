@@ -43,23 +43,21 @@ router.post('/book', async (req, res) => {
       }
     }, 10 * 60 * 1000);
 
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, fullName);
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      demoOTPs.delete(email);
-      return res.status(500).json({ 
-        error: 'Failed to send verification email. Please try again.' 
-      });
-    }
-
+    // Send response immediately
     res.json({
       success: true,
       message: 'Please check your email for the verification code.',
       requiresVerification: true,
       email: email,
     });
+
+    // Send OTP email asynchronously (fire and forget)
+    sendOTPEmail(email, otp, fullName)
+      .then(() => console.log('✅ Demo OTP email sent to:', email))
+      .catch(err => {
+        console.error('❌ Failed to send demo OTP email:', err);
+        console.log('⚠️  User can still verify via resend OTP');
+      });
   } catch (error) {
     console.error('Demo booking error:', error);
     res.status(500).json({ error: 'Server error processing demo booking' });
@@ -155,20 +153,16 @@ router.post('/resend-otp', async (req, res) => {
     stored.otp = otp;
     stored.expiresAt = otpExpiry;
 
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, stored.demoData.fullName);
-    } catch (emailError) {
-      console.error('Failed to resend OTP email:', emailError);
-      return res.status(500).json({ 
-        error: 'Failed to send verification email. Please try again.' 
-      });
-    }
-
+    // Send response immediately
     res.json({
       success: true,
       message: 'New OTP sent to your email',
     });
+
+    // Send OTP email asynchronously (fire and forget)
+    sendOTPEmail(email, otp, stored.demoData.fullName)
+      .then(() => console.log('✅ Resend demo OTP email sent to:', email))
+      .catch(err => console.error('❌ Failed to resend demo OTP email:', err));
   } catch (error) {
     console.error('Resend demo OTP error:', error);
     res.status(500).json({ error: 'Server error during OTP resend' });

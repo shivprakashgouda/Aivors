@@ -83,32 +83,29 @@ router.post('/signup', async (req, res) => {
       recentActivity: [],
     });
 
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, name);
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      // Delete the user if email fails
-      await User.findByIdAndDelete(user._id);
-      return res.status(500).json({ 
-        error: 'Failed to send verification email. Please try again.' 
-      });
-    }
-
-    // Create audit log
-    await AuditLog.create({
-      userId: user._id,
-      eventType: 'USER_CREATED',
-      payload: { email: user.email, name: user.name, verified: false },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-
+    // Send response immediately - don't wait for email
     res.status(201).json({
       message: 'Account created! Please check your email for the verification code.',
       requiresVerification: true,
       email: email,
     });
+
+    // Send OTP email asynchronously (fire and forget - don't block response)
+    sendOTPEmail(email, otp, name)
+      .then(() => console.log('✅ OTP email sent to:', email))
+      .catch(err => {
+        console.error('❌ Failed to send OTP email:', err);
+        console.log('⚠️  User can still verify via resend OTP');
+      });
+
+    // Create audit log asynchronously
+    AuditLog.create({
+      userId: user._id,
+      eventType: 'USER_CREATED',
+      payload: { email: user.email, name: user.name, verified: false },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    }).catch(err => console.error('❌ Audit log error:', err));
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Server error during signup' });
@@ -220,29 +217,25 @@ router.post('/resend-otp', async (req, res) => {
     user.otpExpiresAt = otpExpiry;
     await user.save();
 
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, user.name);
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      return res.status(500).json({ 
-        error: 'Failed to send verification email. Please try again.' 
-      });
-    }
+    // Send response immediately
+    res.json({
+      message: 'New OTP sent to your email',
+      email: email,
+    });
 
-    // Create audit log
-    await AuditLog.create({
+    // Send OTP email asynchronously (fire and forget)
+    sendOTPEmail(email, otp, user.name)
+      .then(() => console.log('✅ Resend OTP email sent to:', email))
+      .catch(err => console.error('❌ Failed to resend OTP email:', err));
+
+    // Create audit log asynchronously
+    AuditLog.create({
       userId: user._id,
       eventType: 'OTP_RESENT',
       payload: { email: user.email },
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
-    });
-
-    res.json({
-      message: 'New OTP sent to your email',
-      email: email,
-    });
+    }).catch(err => console.error('❌ Audit log error:', err));
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ error: 'Server error during OTP resend' });
