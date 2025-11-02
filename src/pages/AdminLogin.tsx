@@ -21,12 +21,23 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
+      console.log('🔐 Admin login attempt...');
       try { await api.get('/api/csrf-token'); } catch {}
-      await adminAPI.login({ email, password });
+      
+      const response = await adminAPI.login({ email, password });
+      console.log('✅ Admin login response:', response);
+      
       await refreshUser();
+      console.log('✅ User refreshed, navigating to /admin');
+      
       toast.success('Admin login successful');
-      navigate('/admin');
+      
+      // Small delay to ensure state updates
+      setTimeout(() => {
+        navigate('/admin');
+      }, 100);
     } catch (error: any) {
+      console.error('❌ Admin login error:', error);
       toast.error(error.response?.data?.error || 'Admin login failed');
     } finally {
       setLoading(false);
