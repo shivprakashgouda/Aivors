@@ -5,6 +5,11 @@ const createTransporter = () => {
   // For Render deployment, use environment variables
   // You can use Gmail, SendGrid, AWS SES, or any SMTP service
   
+  console.log('🔧 Email Configuration Check:');
+  console.log('  EMAIL_SERVICE:', process.env.EMAIL_SERVICE);
+  console.log('  EMAIL_USER:', process.env.EMAIL_USER);
+  console.log('  EMAIL_PASSWORD:', process.env.EMAIL_PASSWORD ? `${process.env.EMAIL_PASSWORD.substring(0, 4)}****` : 'NOT SET');
+  
   try {
     if (process.env.EMAIL_SERVICE === 'gmail') {
       // Validate Gmail configuration
@@ -13,19 +18,39 @@ const createTransporter = () => {
         return null;
       }
       
-      return nodemailer.createTransport({
-        service: 'gmail',
+      console.log('📧 Creating Gmail transporter with explicit SMTP settings...');
+      
+      // Use explicit SMTP settings for better reliability
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT || '465'),
+        secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465' || true, // true for 465, false for other ports
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD, // Use App Password for Gmail
         },
+        debug: true, // Enable debug logging
+        logger: true, // Log to console
       });
+      
+      // Verify connection
+      transporter.verify((error, success) => {
+        if (error) {
+          console.error('❌ Gmail SMTP connection failed:', error.message);
+        } else {
+          console.log('✅ Gmail SMTP connection verified successfully!');
+        }
+      });
+      
+      return transporter;
     } else if (process.env.EMAIL_SERVICE === 'smtp') {
       // Validate SMTP configuration
       if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
         console.log('⚠️  SMTP credentials missing. Using test mode.');
         return null;
       }
+      
+      console.log('📧 Creating custom SMTP transporter...');
       
       return nodemailer.createTransporter({
         host: process.env.SMTP_HOST,
@@ -35,6 +60,8 @@ const createTransporter = () => {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASSWORD,
         },
+        debug: true,
+        logger: true,
       });
     } else {
       // Development mode - use ethereal.email for testing
@@ -126,11 +153,28 @@ const sendOTPEmail = async (email, otp, name) => {
       `,
     };
 
+    console.log('📤 Attempting to send OTP email to:', email);
+    console.log('📤 From:', mailOptions.from);
+    
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', info.messageId);
+    console.log('✅ Email sent successfully!');
+    console.log('   Message ID:', info.messageId);
+    console.log('   Response:', info.response);
+    console.log('   Accepted:', info.accepted);
+    console.log('   Rejected:', info.rejected);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending email:', error);
+    console.error('❌ Error sending email:');
+    console.error('   Error name:', error.name);
+    console.error('   Error message:', error.message);
+    console.error('   Error code:', error.code);
+    console.error('   Error command:', error.command);
+    if (error.response) {
+      console.error('   Server response:', error.response);
+    }
+    if (error.responseCode) {
+      console.error('   Response code:', error.responseCode);
+    }
     // Don't throw - return error result to prevent crash
     return { success: false, error: error.message };
   }
