@@ -138,8 +138,16 @@ app.post('/api/create-checkout-session', authGuard, async (req, res, next) => {
   try {
     const { priceId, planName, credits } = req.body;
 
+    console.log('💳 Checkout session request:', {
+      priceId,
+      planName,
+      userId: req.user.userId,
+      origin: req.get('origin'),
+    });
+
     // Check if Stripe is configured
     if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_secret_key_here') {
+      console.log('❌ Stripe not configured');
       return res.status(500).json({ 
         error: 'Stripe not configured',
         message: 'Please set your STRIPE_SECRET_KEY in server/.env file. Get it from https://dashboard.stripe.com/test/apikeys',

@@ -2,6 +2,12 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+console.log('🌐 API Configuration:', {
+  baseURL: API_BASE_URL,
+  env: import.meta.env.MODE,
+  viteApiUrl: import.meta.env.VITE_API_URL,
+});
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +17,47 @@ const api = axios.create({
   },
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-CSRF-Token',
+  timeout: 30000, // 30 second timeout
 });
+
+// Request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`🔵 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      withCredentials: config.withCredentials,
+    });
+    return config;
+  },
+  (error) => {
+    console.error('🔴 Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log(`🟢 API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    console.error('🔴 API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+      isNetworkError: error.message === 'Network Error',
+      isCORS: error.message.includes('CORS'),
+    });
+    return Promise.reject(error);
+  }
+);
 
 // Auth API
 export const authAPI = {
