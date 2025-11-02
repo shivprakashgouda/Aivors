@@ -17,7 +17,7 @@ const api = axios.create({
   },
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-CSRF-Token',
-  timeout: 30000, // 30 second timeout
+  timeout: 60000, // 60 second timeout (increased for slow email services)
 });
 
 // Request interceptor for debugging
