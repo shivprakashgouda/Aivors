@@ -37,7 +37,7 @@ app.use(helmet({
 }));
 // CORS with allowed origins list (supports Vite defaults)
 const defaultClient = process.env.CLIENT_URL || 'http://localhost:8080';
-const allowed = (process.env.CORS_ORIGINS || `${defaultClient},http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`).split(',');
+const allowed = (process.env.CORS_ORIGINS || `${defaultClient},https://aivors-1.onrender.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`).split(',');
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true); // allow non-browser tools
