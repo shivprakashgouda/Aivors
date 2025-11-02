@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { SignInModal } from "@/components/SignInModal";
+import { stripeAPI } from "@/services/api";
 
 const plansData = [
   {
@@ -187,24 +188,15 @@ export const PricingSection = () => {
     setIsLoading(priceId);
     
     try {
-      // Call backend to create Stripe checkout session
-      const response = await fetch("http://localhost:3001/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Important for cookie-based auth
-        body: JSON.stringify({
-          priceId,
-          planName,
-        }),
+      // Call backend to create Stripe checkout session using API service
+      const { url } = await stripeAPI.createCheckoutSession({
+        priceId,
+        planName,
       });
-
-      const data = await response.json();
       
-      if (data.url) {
+      if (url) {
         // Redirect to Stripe Checkout
-        window.location.href = data.url;
+        window.location.href = url;
       } else {
         throw new Error("No checkout URL received");
       }
@@ -215,7 +207,18 @@ export const PricingSection = () => {
       let title = "Checkout Error";
       let description = "Unable to create checkout session";
       
-      if (error.response?.status === 403) {
+      // Handle network/fetch errors
+      if (error.message === 'Network Error' || error.message?.includes('Failed to fetch')) {
+        title = "Connection Error";
+        description = "Unable to connect to the server. Please check your internet connection and try again.";
+      } else if (error.code === 'ECONNABORTED') {
+        title = "Request Timeout";
+        description = "The request took too long. Please try again.";
+      } else if (error.response?.status === 401) {
+        title = "Authentication Required";
+        description = "Please log in to continue with your purchase.";
+        setShowSignIn(true);
+      } else if (error.response?.status === 403) {
         title = "Authentication Required";
         description = "Please log in to continue with your purchase.";
         setShowSignIn(true);
