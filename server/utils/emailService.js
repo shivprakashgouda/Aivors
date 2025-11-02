@@ -184,8 +184,131 @@ const sendWelcomeEmail = async (email, name) => {
   }
 };
 
+// Send demo booking notification email
+const sendDemoBookingEmail = async (demoData) => {
+  try {
+    const transporter = createTransporter();
+    
+    const {fullName, phone, email, businessName, timeSlot, additionalInfo } = demoData;
+    
+    // If no transporter (development mode), just log the booking
+    if (!transporter) {
+      console.log('\n📧 ============ DEMO BOOKING (TEST MODE) ============');
+      console.log(`Name: ${fullName}`);
+      console.log(`Email: ${email}`);
+      console.log(`Phone: ${phone}`);
+      console.log(`Business: ${businessName}`);
+      console.log(`Time Slot: ${timeSlot || 'Not specified'}`);
+      console.log(`Additional Info: ${additionalInfo || 'None'}`);
+      console.log('============================================\n');
+      return { success: true, mode: 'test' };
+    }
+
+    const demoEmail = process.env.DEMO_EMAIL || process.env.EMAIL_USER;
+
+    const mailOptions = {
+      from: `"${process.env.EMAIL_FROM_NAME || 'Aivors'}" <${process.env.EMAIL_USER}>`,
+      to: demoEmail,
+      replyTo: email,
+      subject: `🎯 New Demo Booking: ${businessName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Demo Booking</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🎯 New Demo Booking!</h1>
+          </div>
+          
+          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #667eea; margin-top: 0;">Demo Request Details</h2>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 40%;">Full Name:</td>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee;">${fullName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: bold;">Email:</td>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none;">${email}</a></td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: bold;">Phone:</td>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee;"><a href="tel:${phone}" style="color: #667eea; text-decoration: none;">${phone}</a></td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: bold;">Business Name:</td>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee;">${businessName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: bold;">Preferred Time:</td>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #eee;">${timeSlot || 'Not specified'}</td>
+                </tr>
+                ${additionalInfo ? `
+                <tr>
+                  <td style="padding: 12px 0; font-weight: bold; vertical-align: top;">Additional Info:</td>
+                  <td style="padding: 12px 0;">${additionalInfo}</td>
+                </tr>
+                ` : ''}
+              </table>
+            </div>
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50; margin: 20px 0;">
+              <p style="margin: 0; color: #2e7d32;">
+                <strong>Action Required:</strong> Please respond to this demo request within 24 hours.
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="mailto:${email}?subject=Re: Demo Call for ${businessName}" 
+                 style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Reply to ${fullName}
+              </a>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+            
+            <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+              Received on ${new Date().toLocaleString()}<br>
+              © ${new Date().getFullYear()} Aivors. All rights reserved.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        New Demo Booking Request
+        
+        Full Name: ${fullName}
+        Email: ${email}
+        Phone: ${phone}
+        Business Name: ${businessName}
+        Preferred Time: ${timeSlot || 'Not specified'}
+        ${additionalInfo ? `\nAdditional Information:\n${additionalInfo}` : ''}
+        
+        Received on ${new Date().toLocaleString()}
+        
+        Please respond to this demo request within 24 hours.
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Demo booking email sent successfully:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending demo booking email:', error);
+    throw new Error('Failed to send demo booking notification');
+  }
+};
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
   sendWelcomeEmail,
+  sendDemoBookingEmail,
 };

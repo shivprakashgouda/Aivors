@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Clock, User, Zap } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { demoAPI } from "@/services/api";
 
 interface BookDemoModalProps {
   open: boolean;
@@ -18,19 +19,38 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
     fullName: "",
     phone: "",
     email: "",
-    restaurantName: "",
+    businessName: "",
     timeSlot: "",
     additionalInfo: "",
   });
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Demo request received!",
-      description: "We'll contact you shortly to confirm your booking.",
-    });
-    onOpenChange(false);
+    setIsLoading(true);
+
+    try {
+      await demoAPI.bookDemo(formData);
+      toast.success("Demo request received!", {
+        description: "We'll contact you shortly to confirm your booking.",
+      });
+      
+      // Reset form
+      setFormData({
+        fullName: "",
+        phone: "",
+        email: "",
+        businessName: "",
+        timeSlot: "",
+        additionalInfo: "",
+      });
+      
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to submit demo request. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,7 +64,7 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
         </button>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Book Your AI Demo Call</DialogTitle>
-          <p className="text-center text-muted-foreground">Discover how our AI phone manager can boost your restaurant's revenue</p>
+          <p className="text-center text-muted-foreground">Discover how our AI phone manager can boost your business revenue</p>
         </DialogHeader>
         
         <div className="grid md:grid-cols-2 gap-6 pt-4">
@@ -80,7 +100,7 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
               <Input
                 id="email"
                 type="email"
-                placeholder="john@restaurant.com"
+                placeholder="john@business.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-background border-border focus:border-primary"
@@ -89,12 +109,12 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="restaurantName" className="text-foreground">Restaurant Name *</Label>
+              <Label htmlFor="businessName" className="text-foreground">Business Name *</Label>
               <Input
-                id="restaurantName"
-                placeholder="Your Restaurant"
-                value={formData.restaurantName}
-                onChange={(e) => setFormData({ ...formData, restaurantName: e.target.value })}
+                id="businessName"
+                placeholder="Your Business"
+                value={formData.businessName}
+                onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                 className="bg-background border-border focus:border-primary"
                 required
               />
@@ -118,7 +138,7 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
               <Label htmlFor="additionalInfo" className="text-foreground">Additional Information</Label>
               <Textarea
                 id="additionalInfo"
-                placeholder="Tell us about your restaurant's current challenges..."
+                placeholder="Tell us about your business current challenges..."
                 value={formData.additionalInfo}
                 onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
                 className="bg-background border-border focus:border-primary min-h-24"
@@ -127,9 +147,10 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
 
             <Button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-12"
             >
-              Book My Demo
+              {isLoading ? "Submitting..." : "Book My Demo"}
             </Button>
           </form>
 
@@ -141,7 +162,7 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-2">30-Minute Demo</h3>
-                  <p className="text-muted-foreground">Our AI specialist will show you exactly how our phone manager works with your restaurant</p>
+                  <p className="text-muted-foreground">Our AI specialist will show you exactly how our phone manager works with your business</p>
                 </div>
               </div>
             </div>

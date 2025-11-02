@@ -156,4 +156,12 @@ export const subscriptionAPI = {
   },
 };
 
+// Demo API
+export const demoAPI = {
+  bookDemo: async (data: { fullName: string; phone: string; email: string; businessName: string; timeSlot?: string; additionalInfo?: string }) => {
+    const response = await api.post('/api/demo/book', data);
+    return response.data;
+  },
+};
+
 export default api;
