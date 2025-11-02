@@ -37,11 +37,14 @@ app.use(helmet({
 }));
 // CORS with allowed origins list (supports Vite defaults)
 const defaultClient = process.env.CLIENT_URL || 'http://localhost:8080';
-const allowed = (process.env.CORS_ORIGINS || `${defaultClient},http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`).split(',');
+const allowed = (process.env.CORS_ORIGINS || `${defaultClient},https://aivors-1.onrender.com,https://aivors-5hvj.onrender.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`)
+  .split(',')
+  .map(origin => origin.trim());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true); // allow non-browser tools
     if (allowed.includes(origin)) return callback(null, true);
+    console.log(`❌ CORS blocked for origin: ${origin}. Allowed origins:`, allowed);
     return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
   credentials: true,
@@ -54,7 +57,13 @@ app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // CSRF Protection (cookie-based). Exempt auth entry points that handle their own security
-const csrfProtection = csrf({ cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' } });
+const csrfProtection = csrf({ 
+  cookie: { 
+    httpOnly: true, 
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: process.env.NODE_ENV === 'production' 
+  } 
+});
 app.use((req, res, next) => {
   // Allow preflight without CSRF
   if (req.method === 'OPTIONS') return next();
@@ -88,7 +97,11 @@ app.use((req, res, next) => {
 // Provide CSRF token for clients (GET);
 app.get('/api/csrf-token', (req, res) => {
   const token = req.csrfToken();
-  res.cookie('XSRF-TOKEN', token, { httpOnly: false, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+  res.cookie('XSRF-TOKEN', token, { 
+    httpOnly: false, 
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: process.env.NODE_ENV === 'production' 
+  });
   res.json({ csrfToken: token });
 });
 

@@ -72,7 +72,7 @@ router.post('/signup', async (req, res) => {
     const cookieBase = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-site cookies in production
     };
     res.cookie('access_token', access, { ...cookieBase, maxAge: 15 * 60 * 1000 }); // 15m
     res.cookie('refresh_token', refresh, { ...cookieBase, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7d
@@ -123,7 +123,7 @@ router.post('/login', async (req, res) => {
     const cookieBase = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     };
     res.cookie('access_token', access, { ...cookieBase, maxAge: 15 * 60 * 1000 });
     res.cookie('refresh_token', refresh, { ...cookieBase, maxAge: 7 * 24 * 60 * 60 * 1000 });
@@ -190,7 +190,7 @@ router.post('/refresh', async (req, res) => {
     res.cookie('access_token', access, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000,
     });
     return res.json({ success: true });
