@@ -166,15 +166,15 @@ export const demoAPI = {
     timeSlot?: string;
     additionalInfo?: string;
   }) => {
-    const response = await apiClient.post('/api/demo/book', data);
+    const response = await api.post('/api/demo/book', data);
     return response.data;
   },
   verifyOTP: async (email: string, otp: string) => {
-    const response = await apiClient.post('/api/demo/verify-otp', { email, otp });
+    const response = await api.post('/api/demo/verify-otp', { email, otp });
     return response.data;
   },
   resendOTP: async (email: string) => {
-    const response = await apiClient.post('/api/demo/resend-otp', { email });
+    const response = await api.post('/api/demo/resend-otp', { email });
     return response.data;
   },
 };
