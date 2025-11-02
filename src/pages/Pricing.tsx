@@ -200,7 +200,22 @@ const Pricing = () => {
       let title = "Checkout Error";
       let description = "Unable to create checkout session";
       
-      if (error.response?.status === 403) {
+      // Handle network/fetch errors
+      if (error.message === 'Network Error' || error.message?.includes('Failed to fetch')) {
+        title = "Connection Error";
+        description = "Unable to connect to the server. Please check your internet connection and try again.";
+      } else if (error.code === 'ECONNABORTED') {
+        title = "Request Timeout";
+        description = "The request took too long. Please try again.";
+      } else if (error.response?.status === 401) {
+        title = "Authentication Required";
+        description = "Your session has expired. Please log in again.";
+        // Trigger sign in modal
+        setPending({ priceId, planName });
+        setAuthModalOpen(true);
+        setIsLoading(null);
+        return;
+      } else if (error.response?.status === 403) {
         title = "Authentication Required";
         description = "Please log in to continue with your purchase.";
       } else if (error.response?.status === 500 && error.response?.data?.error === 'Stripe not configured') {
