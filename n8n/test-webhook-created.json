@@ -1,0 +1,48 @@
+{
+  "type": "customer.subscription.created",
+  "data": {
+    "object": {
+      "id": "sub_test_123456789",
+      "object": "subscription",
+      "customer": "cus_test_123456789",
+      "status": "active",
+      "current_period_start": 1698796800,
+      "current_period_end": 1730419200,
+      "items": {
+        "object": "list",
+        "data": [
+          {
+            "id": "si_test",
+            "object": "subscription_item",
+            "price": {
+              "id": "price_pro_monthly",
+              "object": "price",
+              "active": true,
+              "currency": "inr",
+              "nickname": "Pro Plan",
+              "unit_amount": 99900,
+              "recurring": {
+                "interval": "month",
+                "interval_count": 1
+              }
+            },
+            "plan": {
+              "id": "plan_pro",
+              "object": "plan",
+              "active": true,
+              "amount": 99900,
+              "currency": "inr",
+              "interval": "month",
+              "nickname": "Pro Plan"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "userId": "64f1a2b3c4d5e6f7g8h9i0j1",
+        "planName": "Pro"
+      }
+    }
+  },
+  "created": 1698796800
+}
