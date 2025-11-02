@@ -28,6 +28,10 @@ const n8nRoutes = require('./routes/n8n');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy - REQUIRED for deployment platforms like Render, Heroku, etc.
+// This allows Express to trust X-Forwarded-* headers for rate limiting and IP detection
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 

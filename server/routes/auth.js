@@ -74,6 +74,13 @@ router.post('/signup', async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-site cookies in production
     };
+    
+    console.log('🍪 Setting cookies with config:', {
+      ...cookieBase,
+      nodeEnv: process.env.NODE_ENV,
+      origin: req.get('origin'),
+    });
+    
     res.cookie('access_token', access, { ...cookieBase, maxAge: 15 * 60 * 1000 }); // 15m
     res.cookie('refresh_token', refresh, { ...cookieBase, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7d
 
@@ -125,6 +132,14 @@ router.post('/login', async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     };
+    
+    console.log('🍪 Login: Setting cookies with config:', {
+      ...cookieBase,
+      nodeEnv: process.env.NODE_ENV,
+      origin: req.get('origin'),
+      userId: user._id.toString(),
+    });
+    
     res.cookie('access_token', access, { ...cookieBase, maxAge: 15 * 60 * 1000 });
     res.cookie('refresh_token', refresh, { ...cookieBase, maxAge: 7 * 24 * 60 * 60 * 1000 });
 

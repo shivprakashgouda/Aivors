@@ -24,11 +24,29 @@ const verifyRefreshToken = (token) => {
 // Auth guard expects a valid access token in cookie
 const authGuard = (req, res, next) => {
   const token = req.cookies?.access_token || req.cookies?.__session || req.cookies?.token; // support legacy name
-  if (!token) return res.status(401).json({ error: 'Unauthorized', message: 'No token provided' });
+  
+  // Debug logging
+  console.log('🔐 Auth Guard Debug:', {
+    hasAccessToken: !!req.cookies?.access_token,
+    hasSession: !!req.cookies?.__session,
+    hasToken: !!req.cookies?.token,
+    allCookies: Object.keys(req.cookies || {}),
+    origin: req.get('origin'),
+    referer: req.get('referer'),
+  });
+  
+  if (!token) {
+    console.log('❌ No token found in cookies');
+    return res.status(401).json({ error: 'Unauthorized', message: 'No token provided' });
+  }
 
   const decoded = verifyAccessToken(token);
-  if (!decoded) return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token' });
+  if (!decoded) {
+    console.log('❌ Token verification failed');
+    return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token' });
+  }
 
+  console.log('✅ Token verified for user:', decoded.userId);
   req.user = decoded; // { userId, role }
   next();
 };
