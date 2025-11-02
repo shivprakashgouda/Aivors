@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -159,8 +159,9 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-center">Verify Your Email</DialogTitle>
-              <p className="text-center text-muted-foreground">We've sent a 6-digit code to</p>
-              <p className="text-center text-primary font-medium">{verificationEmail}</p>
+              <DialogDescription className="text-center text-muted-foreground">
+                We've sent a 6-digit code to <span className="text-primary font-medium">{verificationEmail}</span>
+              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6 pt-4">

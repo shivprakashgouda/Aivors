@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -143,9 +143,9 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-center">Verify Your Email</DialogTitle>
-              <p className="text-center text-muted-foreground">
+              <DialogDescription className="text-center text-muted-foreground">
                 We've sent a 6-digit code to <strong>{formData.email}</strong>
-              </p>
+              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6 py-6">
@@ -193,7 +193,9 @@ export const BookDemoModal = ({ open, onOpenChange }: BookDemoModalProps) => {
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-center">Book Your AI Demo Call</DialogTitle>
-              <p className="text-center text-muted-foreground">Discover how our AI phone manager can boost your business revenue</p>
+              <DialogDescription className="text-center text-muted-foreground">
+                Discover how our AI phone manager can boost your business revenue
+              </DialogDescription>
             </DialogHeader>
             
             <div className="grid md:grid-cols-2 gap-6 pt-4">
