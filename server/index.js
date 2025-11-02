@@ -88,6 +88,9 @@ app.use((req, res, next) => {
   // - /api/auth/logout: Protected by authGuard (JWT cookie), CSRF would block logout
   // - /api/auth/login: Protected by password verification, CSRF adds friction
   // - /api/auth/signup: New user registration, no prior session
+  // - /api/auth/verify-otp: OTP verification for new users
+  // - /api/auth/resend-otp: OTP resend for new users
+  // - /api/demo/*: Demo booking with OTP verification
   // - /api/admin/*: All admin endpoints protected by authGuard + adminGuard
   // - /api/dashboard: Protected by authGuard
   // - Stripe endpoints: Already protected by authGuard, CSRF adds unnecessary friction
@@ -97,6 +100,9 @@ app.use((req, res, next) => {
     || req.path === '/api/auth/logout'
     || req.path === '/api/auth/login'
     || req.path === '/api/auth/signup'
+    || req.path === '/api/auth/verify-otp'
+    || req.path === '/api/auth/resend-otp'
+    || req.path.startsWith('/api/demo')
     || req.path.startsWith('/api/admin')
     || req.path.startsWith('/api/dashboard')
     || req.path === '/api/create-checkout-session'
