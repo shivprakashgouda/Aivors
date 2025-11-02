@@ -5,28 +5,46 @@ const createTransporter = () => {
   // For Render deployment, use environment variables
   // You can use Gmail, SendGrid, AWS SES, or any SMTP service
   
-  if (process.env.EMAIL_SERVICE === 'gmail') {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD, // Use App Password for Gmail
-      },
-    });
-  } else if (process.env.EMAIL_SERVICE === 'smtp') {
-    return nodemailer.createTransporter({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
-  } else {
-    // Development mode - use ethereal.email for testing
-    // This won't actually send emails, but will log them
-    console.log('⚠️  Email service not configured. Using test mode (emails will be logged).');
+  try {
+    if (process.env.EMAIL_SERVICE === 'gmail') {
+      // Validate Gmail configuration
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        console.log('⚠️  Gmail credentials missing. Using test mode.');
+        return null;
+      }
+      
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD, // Use App Password for Gmail
+        },
+      });
+    } else if (process.env.EMAIL_SERVICE === 'smtp') {
+      // Validate SMTP configuration
+      if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+        console.log('⚠️  SMTP credentials missing. Using test mode.');
+        return null;
+      }
+      
+      return nodemailer.createTransporter({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+    } else {
+      // Development mode - use ethereal.email for testing
+      // This won't actually send emails, but will log them
+      console.log('⚠️  Email service not configured. Using test mode (emails will be logged).');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error creating email transporter:', error.message);
+    console.log('⚠️  Falling back to test mode.');
     return null;
   }
 };
@@ -113,7 +131,8 @@ const sendOTPEmail = async (email, otp, name) => {
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Error sending email:', error);
-    throw new Error('Failed to send verification email');
+    // Don't throw - return error result to prevent crash
+    return { success: false, error: error.message };
   }
 };
 
@@ -180,7 +199,7 @@ const sendWelcomeEmail = async (email, name) => {
   } catch (error) {
     console.error('❌ Error sending welcome email:', error);
     // Don't throw error for welcome email - it's not critical
-    return { success: false };
+    return { success: false, error: error.message };
   }
 };
 
@@ -302,7 +321,8 @@ const sendDemoBookingEmail = async (demoData) => {
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Error sending demo booking email:', error);
-    throw new Error('Failed to send demo booking notification');
+    // Don't throw - return error result to prevent crash
+    return { success: false, error: error.message };
   }
 };
 
