@@ -99,21 +99,30 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('🔑 Login attempt:', { email, hasPassword: !!password, origin: req.get('origin') });
+
     if (!email || !password) {
+      console.log('❌ Missing email or password');
       return res.status(400).json({ error: 'Email and password required' });
     }
 
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    console.log('✅ User found:', { email, userId: user._id });
 
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
+      console.log('❌ Invalid password for:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    console.log('✅ Password valid for:', email);
 
     // Create audit log
     await AuditLog.create({

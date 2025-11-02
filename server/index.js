@@ -1,6 +1,14 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
+// Log critical environment variables (for debugging)
+console.log('🔧 Environment Check:');
+console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log('  MONGO_URI:', process.env.MONGO_URI ? '✅ Set' : '❌ Missing');
+console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '✅ Set' : '❌ Missing (using fallback)');
+console.log('  CLIENT_URL:', process.env.CLIENT_URL || 'http://localhost:8080 (default)');
+console.log('  CORS_ORIGINS:', process.env.CORS_ORIGINS ? '✅ Set' : 'Using defaults');
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
