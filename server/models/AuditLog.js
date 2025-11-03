@@ -18,6 +18,8 @@ const auditLogSchema = new mongoose.Schema({
       'USER_CREATED',
       'USER_LOGIN',
       'USER_LOGOUT',
+      'OTP_RESENT',
+      'EMAIL_VERIFIED',
       'CHECKOUT_CREATED',
       'SUBSCRIPTION_ACTIVATED',
       'PAYMENT_SUCCEEDED',
