@@ -1,0 +1,145 @@
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+  },
+  passwordHash: {
+    type: String,
+    required: true,
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationOTP: {
+    type: String,
+    default: null,
+  },
+  otpExpiresAt: {
+    type: Date,
+    default: null,
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user',
+  },
+  status: {
+    type: String,
+    enum: ['pending_payment', 'active', 'inactive', 'cancelled'],
+    default: 'pending_payment',
+  },
+  subscription: {
+    plan: {
+      type: String,
+      default: 'Free',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'past_due', 'cancelled', 'inactive'],
+      default: 'inactive',
+    },
+    minutesPurchased: {
+      type: Number,
+      default: 0,
+    },
+    minutesRemaining: {
+      type: Number,
+      default: 0,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null,
+    },
+    stripeSubscriptionId: {
+      type: String,
+      default: null,
+    },
+    startDate: {
+      type: Date,
+      default: null,
+    },
+    nextBillingDate: {
+      type: Date,
+      default: null,
+    },
+  },
+  business: {
+    setupStatus: {
+      type: String,
+      enum: ['incomplete', 'complete'],
+      default: 'incomplete',
+    },
+    aiTrainingStatus: {
+      type: String,
+      enum: ['incomplete', 'complete'],
+      default: 'incomplete',
+    },
+    posIntegration: {
+      type: String,
+      enum: ['incomplete', 'complete'],
+      default: 'incomplete',
+    },
+    phoneNumber: {
+      type: String,
+      default: 'Not Active',
+    },
+  },
+  analytics: {
+    callsToday: {
+      type: Number,
+      default: 0,
+    },
+    callsChangePercent: {
+      type: Number,
+      default: 0,
+    },
+    aiStatus: {
+      type: String,
+      enum: ['Online', 'Offline', 'Maintenance'],
+      default: 'Offline',
+    },
+    responseTime: {
+      type: Number,
+      default: 0,
+    },
+  },
+  recentActivity: [{
+    text: {
+      type: String,
+      required: true,
+    },
+    timeAgo: {
+      type: String,
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
+}, { timestamps: true });
+
+// Indexes
+// Email index is already created by 'unique: true' in schema
+userSchema.index({ status: 1 });
+
+// Instance method to sanitize user object (remove password)
+userSchema.methods.toSafeObject = function() {
+  const obj = this.toObject();
+  delete obj.passwordHash;
+  delete obj.__v;
+  return obj;
+};
+
+module.exports = mongoose.model('User', userSchema);

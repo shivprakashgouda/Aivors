@@ -1,0 +1,48 @@
+{
+  "type": "customer.subscription.updated",
+  "data": {
+    "object": {
+      "id": "sub_test_123456789",
+      "object": "subscription",
+      "customer": "cus_test_123456789",
+      "status": "active",
+      "current_period_start": 1698796800,
+      "current_period_end": 1730419200,
+      "items": {
+        "object": "list",
+        "data": [
+          {
+            "id": "si_test",
+            "object": "subscription_item",
+            "price": {
+              "id": "price_enterprise_monthly",
+              "object": "price",
+              "active": true,
+              "currency": "inr",
+              "nickname": "Enterprise Plan",
+              "unit_amount": 199900,
+              "recurring": {
+                "interval": "month",
+                "interval_count": 1
+              }
+            },
+            "plan": {
+              "id": "plan_enterprise",
+              "object": "plan",
+              "active": true,
+              "amount": 199900,
+              "currency": "inr",
+              "interval": "month",
+              "nickname": "Enterprise Plan"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "userId": "64f1a2b3c4d5e6f7g8h9i0j1",
+        "planName": "Enterprise"
+      }
+    }
+  },
+  "created": 1698883200
+}

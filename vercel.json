@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "src": "/api/.*",
+      "dest": "https://aivors-5hvj.onrender.com"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
