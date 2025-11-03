@@ -13,9 +13,11 @@ try {
   console.log('ℹ️  Resend SDK not installed. Install with: npm install resend');
 }
 
-// Check if Resend is configured
+// Check if Resend is configured AND has valid API key format
 const isResendConfigured = () => {
-  return process.env.RESEND_API_KEY && Resend;
+  const apiKey = process.env.RESEND_API_KEY;
+  // Valid Resend API key must start with 're_'
+  return apiKey && apiKey.startsWith('re_') && Resend;
 };
 
 // Create Resend client
@@ -181,8 +183,19 @@ const sendOTPEmail = async (email, otp, name) => {
       if (error) {
         console.error('\n❌ ========== RESEND API ERROR ==========');
         console.error('Error:', error);
+        console.error('   Hint: Check that RESEND_API_KEY starts with "re_"');
+        console.error('   Get valid key at: https://resend.com/api-keys');
         console.error('========================================\n');
-        return { success: false, error: error.message };
+        
+        // If invalid API key, print the OTP to console for testing
+        console.log('\n⚠️  ========== EMAIL FAILED - OTP FOR TESTING ==========');
+        console.log(`   Email: ${email}`);
+        console.log(`   OTP: ${otp}`);
+        console.log(`   Name: ${name}`);
+        console.log('   ACTION: Use this OTP to verify your account manually');
+        console.log('=========================================================\n');
+        
+        return { success: false, error: error.message, otp: otp };
       }
 
       console.log('\n✅ ========== EMAIL SENT VIA RESEND ==========');
