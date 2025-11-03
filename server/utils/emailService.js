@@ -141,8 +141,15 @@ const sendOTPEmail = async (email, otp, name) => {
       return { success: true, mode: 'test' };
     }
 
-    const fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
+    // Determine from email - use Resend's test domain if Gmail is configured
+    let fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
     const fromName = process.env.EMAIL_FROM_NAME || 'Aivors';
+    
+    // If using Resend but EMAIL_USER is Gmail, use Resend's test domain instead
+    if (transporter === 'RESEND' && fromEmail.includes('@gmail.com')) {
+      console.log('⚠️  Gmail address detected with Resend - switching to Resend test domain');
+      fromEmail = 'onboarding@resend.dev';
+    }
 
     // Use Resend API
     if (transporter === 'RESEND') {
