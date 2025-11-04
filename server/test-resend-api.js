@@ -2,7 +2,7 @@
 require('dotenv').config();
 const { Resend } = require('resend');
 
-const apiKey = process.env.RESEND_API_KEY || 're_T2q2X2uU_NJJ6sNWAaAi5f3XbXocEtziS';
+const apiKey = process.env.RESEND_API_KEY || 're_JzokRbD8_128L6q213UC5qbyz3HiKiWy2';
 
 console.log('\n🔍 ========== TESTING RESEND API KEY ==========');
 console.log('API Key:', apiKey);
