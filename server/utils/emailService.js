@@ -190,8 +190,26 @@ const sendOTPEmail = async (email, otp, name) => {
       if (error) {
         console.error('\n❌ ========== RESEND API ERROR ==========');
         console.error('Error:', error);
-        console.error('   Hint: Check that RESEND_API_KEY starts with "re_"');
-        console.error('   Get valid key at: https://resend.com/api-keys');
+        
+        // Check for domain verification error
+        if (error.message && error.message.includes('verify a domain')) {
+          console.error('\n🔴 DOMAIN VERIFICATION REQUIRED');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('Resend test domain can only send to your registered email.');
+          console.error('');
+          console.error('QUICK FIX (for testing):');
+          console.error('  Set DEMO_EMAIL to match your Resend account email exactly');
+          console.error('  Example: DEMO_EMAIL=info@aiactivesolutions.com');
+          console.error('');
+          console.error('PRODUCTION FIX:');
+          console.error('  1. Verify your domain at: https://resend.com/domains');
+          console.error('  2. Update EMAIL_USER to use verified domain');
+          console.error('  3. See RESEND-DOMAIN-FIX.md for detailed guide');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        } else {
+          console.error('   Hint: Check that RESEND_API_KEY starts with "re_"');
+          console.error('   Get valid key at: https://resend.com/api-keys');
+        }
         console.error('========================================\n');
         
         // If invalid API key, print the OTP to console for testing
@@ -425,7 +443,34 @@ This is an automated notification from Aivors Demo Booking System
 © ${new Date().getFullYear()} Aivors. All rights reserved.`,
       });
 
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        console.error('\n❌ ========== DEMO EMAIL RESEND ERROR ==========');
+        console.error('Error:', error);
+        
+        // Check for domain verification error
+        if (error.message && error.message.includes('verify a domain')) {
+          console.error('\n🔴 DOMAIN VERIFICATION REQUIRED');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('Resend test domain can only send to your registered email.');
+          console.error('');
+          console.error('Current setup:');
+          console.error(`  From: ${fromEmail}`);
+          console.error(`  To: ${demoEmail}`);
+          console.error('');
+          console.error('QUICK FIX (for testing):');
+          console.error('  Set DEMO_EMAIL to match your Resend account email exactly');
+          console.error('  Example: DEMO_EMAIL=info@aiactivesolutions.com');
+          console.error('');
+          console.error('PRODUCTION FIX:');
+          console.error('  1. Verify your domain at: https://resend.com/domains');
+          console.error('  2. Update EMAIL_USER to use verified domain');
+          console.error('  3. See RESEND-DOMAIN-FIX.md for detailed guide');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        }
+        console.error('===============================================\n');
+        
+        return { success: false, error: error.message };
+      }
       console.log('✅ Demo booking email sent via Resend');
       return { success: true, messageId: data.id, provider: 'resend' };
     }

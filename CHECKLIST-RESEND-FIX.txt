@@ -1,0 +1,123 @@
+┌─────────────────────────────────────────────────────┐
+│  🔧 RESEND EMAIL FIX - QUICK START CHECKLIST        │
+└─────────────────────────────────────────────────────┘
+
+📋 QUICK FIX (5 minutes - Do this NOW)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Go to: https://dashboard.render.com/
+□ Login to your account
+□ Click on your backend service
+□ Click "Environment" tab
+□ Find DEMO_EMAIL variable
+□ Change value to: info@aiactivesolutions.com
+  ⚠️  Must be EXACT (case-sensitive)
+  ✅ info@aiactivesolutions.com
+  ❌ Info@aiactivesolutions.com
+  ❌ tanmay9623bari@gmail.com
+□ Click "Save Changes"
+□ Wait 2-3 minutes for auto-redeploy
+□ Check "Logs" tab - look for "Live ✅"
+□ Test demo booking on website
+□ Verify OTP email received
+□ Check demo notification at info@aiactivesolutions.com
+
+✅ DONE! Demo emails should work now.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 PRODUCTION FIX (30 minutes - Do this later for full features)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Read: RESEND-DOMAIN-FIX.md (complete guide)
+□ Login to Resend: https://resend.com/login
+□ Click "Domains" → "Add Domain"
+□ Enter: aivors.com (or aiactivesolutions.com)
+□ Copy DNS TXT records shown by Resend
+□ Login to your domain provider:
+  □ GoDaddy: My Products → DNS
+  □ Cloudflare: DNS tab
+  □ Namecheap: Advanced DNS
+□ Add TXT records (both of them)
+□ Wait 5-10 minutes
+□ Verify domain on Resend
+□ Check status shows "Verified ✅"
+□ Update Render environment:
+  EMAIL_USER=noreply@aivors.com
+  DEMO_EMAIL=tanmay9623bari@gmail.com
+□ Save and redeploy
+□ Test demo booking
+□ Check email at tanmay9623bari@gmail.com
+
+✅ DONE! Now you can send to ANY email address.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Start Here:
+  1. README-RESEND-FIX.md        ← Problem overview
+  2. APPLY-RESEND-FIX.md         ← Quick fix steps
+  3. RESEND-DOMAIN-FIX.md        ← Domain verification guide
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Still getting error?
+  □ DEMO_EMAIL is EXACTLY: info@aiactivesolutions.com
+  □ Service redeployed successfully
+  □ Check Render logs for error details
+  □ Try Manual Deploy: Render → Manual Deploy
+
+Not receiving emails?
+  □ Check spam/junk folder
+  □ Verify RESEND_API_KEY is correct
+  □ Verify email address is correct
+
+Want to send to different email?
+  □ Option 1: Change DEMO_EMAIL (must match Resend account)
+  □ Option 2: Verify domain (then any email works)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ TIME ESTIMATES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quick Fix:              5 minutes
+Domain Verification:   30 minutes
+DNS Propagation:     5-30 minutes (can be up to 24 hours)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ SUCCESS CRITERIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After Quick Fix:
+  ✓ Demo form submits without errors
+  ✓ OTP email received
+  ✓ OTP verification works
+  ✓ Demo notification received at info@aiactivesolutions.com
+  ✓ No 500 errors in browser console
+
+After Domain Verification:
+  ✓ All of the above
+  ✓ Emails from noreply@aivors.com
+  ✓ Demo notifications to any email
+  ✓ Professional email branding
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 READY TO START?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Complete Quick Fix checklist above
+2. Test thoroughly
+3. Read RESEND-DOMAIN-FIX.md for production setup
+4. Verify domain when ready
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Last Updated: November 4, 2025
