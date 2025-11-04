@@ -319,8 +319,93 @@ const sendDemoBookingEmail = async (demoData) => {
         to: [demoEmail],
         replyTo: email,
         subject: `🎯 New Demo Booking: ${businessName}`,
-        html: `<p>New demo booking from ${fullName} (${email})</p>`,
-        text: `New demo booking from ${fullName} (${email})`,
+        html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">🎯 New Demo Request</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">From Aivors Website</p>
+  </div>
+  
+  <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="color: #667eea; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Contact Information</h2>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <td style="padding: 12px; background: #f9f9f9; border: 1px solid #e0e0e0; font-weight: bold; width: 40%;">👤 Full Name:</td>
+        <td style="padding: 12px; background: white; border: 1px solid #e0e0e0;">${fullName}</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; background: #f9f9f9; border: 1px solid #e0e0e0; font-weight: bold;">📧 Email:</td>
+        <td style="padding: 12px; background: white; border: 1px solid #e0e0e0;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none;">${email}</a></td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; background: #f9f9f9; border: 1px solid #e0e0e0; font-weight: bold;">📱 Phone:</td>
+        <td style="padding: 12px; background: white; border: 1px solid #e0e0e0;"><a href="tel:${phone}" style="color: #667eea; text-decoration: none;">${phone}</a></td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; background: #f9f9f9; border: 1px solid #e0e0e0; font-weight: bold;">🏢 Business Name:</td>
+        <td style="padding: 12px; background: white; border: 1px solid #e0e0e0;">${businessName}</td>
+      </tr>
+      ${timeSlot ? `<tr>
+        <td style="padding: 12px; background: #f9f9f9; border: 1px solid #e0e0e0; font-weight: bold;">🕐 Preferred Time:</td>
+        <td style="padding: 12px; background: white; border: 1px solid #e0e0e0;">${timeSlot}</td>
+      </tr>` : ''}
+      ${additionalInfo ? `<tr>
+        <td style="padding: 12px; background: #f9f9f9; border: 1px solid #e0e0e0; font-weight: bold; vertical-align: top;">📝 Additional Info:</td>
+        <td style="padding: 12px; background: white; border: 1px solid #e0e0e0;">${additionalInfo.replace(/\n/g, '<br>')}</td>
+      </tr>` : ''}
+    </table>
+
+    <div style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; font-size: 14px;"><strong>📅 Submitted:</strong> ${new Date().toLocaleString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      })}</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+      <a href="mailto:${email}" style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 5px;">Reply to Client</a>
+      <a href="tel:${phone}" style="display: inline-block; background: #764ba2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 5px;">Call Client</a>
+    </div>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+    
+    <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+      This is an automated notification from Aivors Demo Booking System<br>
+      © ${new Date().getFullYear()} Aivors. All rights reserved.
+    </p>
+  </div>
+</body>
+</html>`,
+        text: `🎯 NEW DEMO BOOKING REQUEST
+
+Contact Information:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Full Name: ${fullName}
+📧 Email: ${email}
+📱 Phone: ${phone}
+🏢 Business: ${businessName}
+${timeSlot ? `🕐 Preferred Time: ${timeSlot}` : ''}
+${additionalInfo ? `\n📝 Additional Information:\n${additionalInfo}` : ''}
+
+📅 Submitted: ${new Date().toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quick Actions:
+• Reply: ${email}
+• Call: ${phone}
+
+---
+This is an automated notification from Aivors Demo Booking System
+© ${new Date().getFullYear()} Aivors. All rights reserved.`,
       });
 
       if (error) return { success: false, error: error.message };
@@ -334,8 +419,30 @@ const sendDemoBookingEmail = async (demoData) => {
       to: demoEmail,
       replyTo: email,
       subject: `🎯 New Demo Booking: ${businessName}`,
-      html: `<p>New demo booking from ${fullName} (${email})</p>`,
-      text: `New demo booking from ${fullName} (${email})`,
+      html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #667eea;">🎯 New Demo Request</h2>
+  <p><strong>Full Name:</strong> ${fullName}</p>
+  <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+  <p><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></p>
+  <p><strong>Business:</strong> ${businessName}</p>
+  ${timeSlot ? `<p><strong>Preferred Time:</strong> ${timeSlot}</p>` : ''}
+  ${additionalInfo ? `<p><strong>Additional Info:</strong><br>${additionalInfo.replace(/\n/g, '<br>')}</p>` : ''}
+  <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+</body>
+</html>`,
+      text: `NEW DEMO BOOKING
+
+Name: ${fullName}
+Email: ${email}
+Phone: ${phone}
+Business: ${businessName}
+${timeSlot ? `Time: ${timeSlot}` : ''}
+${additionalInfo ? `\nAdditional Info:\n${additionalInfo}` : ''}
+
+Submitted: ${new Date().toLocaleString()}`,
     };
 
     const info = await transporter.sendMail(mailOptions);
