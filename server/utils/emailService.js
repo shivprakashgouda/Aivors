@@ -245,8 +245,15 @@ const sendWelcomeEmail = async (email, name) => {
       return { success: true, mode: 'test' };
     }
 
-    const fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
+    // Determine from email - use Resend's test domain if unverified domain
+    let fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
     const fromName = process.env.EMAIL_FROM_NAME || 'Aivors';
+    
+    // If using Resend but EMAIL_USER is Gmail or unverified domain, use Resend's test domain
+    if (transporter === 'RESEND' && (fromEmail.includes('@gmail.com') || fromEmail.includes('@aivors.com') || fromEmail.includes('@aiactivesolutions.com'))) {
+      console.log('⚠️  Using Resend test domain for welcome email');
+      fromEmail = 'onboarding@resend.dev';
+    }
 
     // Resend API
     if (transporter === 'RESEND') {
@@ -293,9 +300,16 @@ const sendDemoBookingEmail = async (demoData) => {
       return { success: true, mode: 'test' };
     }
 
-    const fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
+    // Determine from email - use Resend's test domain if unverified domain
+    let fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
     const fromName = process.env.EMAIL_FROM_NAME || 'Aivors';
     const demoEmail = process.env.DEMO_EMAIL || fromEmail;
+    
+    // If using Resend but EMAIL_USER is Gmail or unverified domain, use Resend's test domain
+    if (transporter === 'RESEND' && (fromEmail.includes('@gmail.com') || fromEmail.includes('@aivors.com') || fromEmail.includes('@aiactivesolutions.com'))) {
+      console.log('⚠️  Using Resend test domain for demo booking email');
+      fromEmail = 'onboarding@resend.dev';
+    }
 
     // Resend API
     if (transporter === 'RESEND') {
