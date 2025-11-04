@@ -95,10 +95,28 @@ router.post('/verify-otp', async (req, res) => {
     stored.verified = true;
 
     // Send demo booking notification email to admin
+    console.log('📧 ========== SENDING DEMO BOOKING EMAIL ==========');
+    console.log('Demo Data:', JSON.stringify(stored.demoData, null, 2));
+    console.log('Sending to:', process.env.DEMO_EMAIL);
+    console.log('==================================================');
+    
     try {
-      await sendDemoBookingEmail(stored.demoData);
+      const emailResult = await sendDemoBookingEmail(stored.demoData);
+      console.log('📧 Demo email result:', emailResult);
+      
+      if (!emailResult || !emailResult.success) {
+        console.error('❌ Demo booking email failed:', emailResult);
+        throw new Error(emailResult?.error || 'Email sending failed');
+      }
+      
+      console.log('✅ Demo booking notification sent successfully');
     } catch (emailError) {
-      console.error('Failed to send demo booking email:', emailError);
+      console.error('❌ Failed to send demo booking email:', emailError);
+      console.error('Error details:', {
+        message: emailError.message,
+        stack: emailError.stack,
+        demoData: stored.demoData
+      });
       return res.status(500).json({ 
         error: 'Failed to send demo booking notification. Please try again.' 
       });

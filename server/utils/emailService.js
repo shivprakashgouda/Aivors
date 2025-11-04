@@ -290,9 +290,20 @@ const sendWelcomeEmail = async (email, name) => {
 };
 
 const sendDemoBookingEmail = async (demoData) => {
+  console.log('\n📧 ========== PREPARING DEMO BOOKING EMAIL ==========');
+  console.log('Demo Data Received:', {
+    fullName: demoData.fullName,
+    email: demoData.email,
+    phone: demoData.phone,
+    businessName: demoData.businessName,
+    timeSlot: demoData.timeSlot,
+    hasAdditionalInfo: !!demoData.additionalInfo
+  });
+  
   try {
     const transporter = createTransporter();
     const { fullName, phone, email, businessName, timeSlot, additionalInfo } = demoData;
+    
     if (!transporter) {
       console.log('\n📧 ============ DEMO BOOKING (TEST MODE) ============');
       console.log(`Name: ${fullName}, Email: ${email}`);
@@ -305,10 +316,16 @@ const sendDemoBookingEmail = async (demoData) => {
     const fromName = process.env.EMAIL_FROM_NAME || 'Aivors';
     const demoEmail = process.env.DEMO_EMAIL || fromEmail;
     
+    console.log('📧 Email Configuration:');
+    console.log('  From:', fromEmail);
+    console.log('  To:', demoEmail);
+    console.log('  Reply-To:', email);
+    
     // If using Resend but EMAIL_USER is Gmail or unverified domain, use Resend's test domain
     if (transporter === 'RESEND' && (fromEmail.includes('@gmail.com') || fromEmail.includes('@aivors.com') || fromEmail.includes('@aiactivesolutions.com'))) {
       console.log('⚠️  Using Resend test domain for demo booking email');
       fromEmail = 'onboarding@resend.dev';
+      console.log('  Updated From:', fromEmail);
     }
 
     // Resend API
