@@ -63,9 +63,9 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
                 <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Pricing
                 </Link>
-                <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                {/* <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
-                </Link>
+                </Link> */}
               </>
             )}
           </div>
@@ -84,9 +84,9 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     My Account
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/business-dashboard")}>
+                  {/* <DropdownMenuItem onClick={() => navigate("/business-dashboard")}>
                     Business Dashboard
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     <LogOut className="w-4 h-4 mr-2" /> Sign Out
                   </DropdownMenuItem>
