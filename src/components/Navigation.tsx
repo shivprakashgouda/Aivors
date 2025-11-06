@@ -106,13 +106,13 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
                 Admin Login
               </Button>
             </Link> */}
-            <a href="">
+            
              <Button
               onClick={onBookDemoClick}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
               Book A Demo
-            </Button> </a>
+            </Button> 
           </div>
         </div>
       </div>
