@@ -251,7 +251,7 @@ const pricing = pricingMap[priceId] || pricingMap.price_starter_monthly;
       line_items: [
         {
           price_data: {
-            currency: 'inr',
+            currency: 'usd',
             product_data: {
               name: planName || 'AI Voice Subscription',
               description: `${pricing.minutes} minutes of AI voice calls`,
