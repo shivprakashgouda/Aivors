@@ -12,7 +12,7 @@ const plansData = [
   {
     name: "Starter",
     monthly: {
-      price: "$29",
+      price: "$49",
       originalPrice: null,
       priceId: "price_starter_monthly",
       discount: null,
