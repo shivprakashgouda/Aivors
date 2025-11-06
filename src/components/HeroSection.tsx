@@ -30,7 +30,7 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
                 variant="outline"
                 className="border-border bg-card hover:bg-muted text-foreground text-lg px-8 h-14"
               >
-                Watch Demo Video
+                Test How Our AI call works
               </Button>
             </div>
             <div className="flex items-center gap-4 pt-4">
