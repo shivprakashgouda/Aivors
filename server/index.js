@@ -201,14 +201,14 @@ const pricingMap = {
   price_starter_monthly: { amount: 49 , minutes: 50, plan: 'Starter Monthly' },
   price_starter_yearly: { amount: 290  , minutes: 600, plan: 'Starter Yearly' },
 
-  price_pro_monthly: { amount: 450  , minutes: 2000, plan: 'Pro Monthly' },
-  price_pro_yearly: { amount: 4500 , minutes: 24000, plan: 'Pro Yearly' },
+  price_pro_monthly: { amount: 375  , minutes: 2000, plan: 'Pro Monthly' },
+  price_pro_yearly: { amount: 3750 , minutes: 24000, plan: 'Pro Yearly' },
 
-  price_growth_monthly: { amount: 900  , minutes: 4000, plan: 'Growth Monthly' },
-  price_growth_yearly: { amount: 9000  , minutes: 48000, plan: 'Growth Yearly' },
+  price_growth_monthly: { amount: 750  , minutes: 4000, plan: 'Growth Monthly' },
+  price_growth_yearly: { amount: 7500  , minutes: 48000, plan: 'Growth Yearly' },
 
-  price_agency_monthly: { amount: 1400  , minutes: 6000, plan: 'Agency Monthly' },
-  price_agency_yearly: { amount: 14000  , minutes: 72000, plan: 'Agency Yearly' },
+  price_agency_monthly: { amount: 1250  , minutes: 6000, plan: 'Agency Monthly' },
+  price_agency_yearly: { amount: 12500  , minutes: 72000, plan: 'Agency Yearly' },
 
   price_enterprise_custom: { amount: 0, minutes: 0, plan: 'Enterprise Custom' },
   price_enterprise_custom_yearly: { amount: 0, minutes: 0, plan: 'Enterprise Custom Yearly' },
