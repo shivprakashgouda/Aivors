@@ -1,69 +1,150 @@
-import { Phone } from "lucide-react";
+import { Phone, User as UserIcon, LogOut } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
-interface FooterProps {
+interface NavigationProps {
+  onSignInClick: () => void;
   onBookDemoClick: () => void;
 }
 
-export const Footer = ({ onBookDemoClick }: FooterProps) => {
+export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isHomePage = location.pathname === "/";
+
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
+
   return (
-    <footer className="border-t border-border bg-card/30">
-      <div className="container mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Phone className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">Aivors</span>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <Phone className="w-5 h-5 text-primary-foreground" />
             </div>
-            <p className="text-muted-foreground">
-              Revolutionizing business communication with AI-powered phone management.
-            </p>
-            <div className="text-muted-foreground text-sm space-y-1">
-              <p>5900 Balcones Dr, Ste 100</p>
-              <p>Austin, TX 78731-4298</p>
-            </div>
+            <span className="text-xl font-bold text-foreground">Aivors</span>
+          </Link>
+
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center gap-8">
+            {isHomePage ? (
+              <>
+                <a
+                  href="#features"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Features
+                </a>
+                <a
+                  href="#pricing"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Pricing
+                </a>
+                <a
+                  href="#faq"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  FAQ
+                </a>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/pricing"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Pricing
+                </Link>
+              </>
+            )}
+
+            {/* My Account link visible when signed in */}
+            {isAuthenticated && (
+              <Link
+                to="/dashboard"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                My Account
+              </Link>
+            )}
           </div>
 
-          <div>
-            <h3 className="font-bold mb-4">CONTACT</h3>
-            <div className="space-y-2 text-muted-foreground">
-              <p>Phone: +18 327804868</p>
-              <p>Support: info@business-ai.com</p>
-              <p>Looking to invest: invest@business-ai.com</p>
-            </div>
-          </div>
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 text-foreground hover:bg-muted"
+                  >
+                    <UserIcon className="w-5 h-5" />
+                    <span className="hidden md:inline">
+                      {user.name || user.email}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    My Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="text-destructive"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={onSignInClick}
+                  className="text-foreground hover:bg-muted"
+                >
+                  Sign In
+                </Button>
 
-          <div>
-            <h3 className="font-bold mb-4">SOCIALS</h3>
-            <div className="space-y-2">
-              <a href="#" className="block text-secondary hover:text-secondary/80 transition-colors">
-                Youtube
-              </a>
-              <a href="#" className="block text-secondary hover:text-secondary/80 transition-colors">
-                Instagram
-              </a>
-              <a href="#" className="block text-secondary hover:text-secondary/80 transition-colors">
-                LinkedIn
-              </a>
-            </div>
+                {/* Show Book A Demo only when not signed in */}
+                <Button
+                  onClick={onBookDemoClick}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                >
+                  Book A Demo
+                </Button>
+              </>
+            )}
           </div>
-
-          <div className="flex justify-end">
-            <Button
-              onClick={onBookDemoClick}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-            >
-              Book A Demo
-            </Button>
-          </div>
-        </div>
-
-        <div className="pt-8 border-t border-border text-center text-muted-foreground">
-          <p>© 2025 by Aivors</p>
         </div>
       </div>
-    </footer>
+    </nav>
   );
 };
+
+export default Navigation;
