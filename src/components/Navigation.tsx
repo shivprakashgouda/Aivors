@@ -82,6 +82,16 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
                 </Link>
               </>
             )}
+
+            {/* My Account visible when signed in */}
+            {isAuthenticated && (
+              <Link
+                to="/dashboard"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                My Account
+              </Link>
+            )}
           </div>
 
           {/* Right Section */}
@@ -121,7 +131,7 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
                   Sign In
                 </Button>
 
-                {/* Show only when user not signed in */}
+                {/* Show Book A Demo only when not signed in */}
                 <Button
                   onClick={onBookDemoClick}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
