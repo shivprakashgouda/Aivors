@@ -444,7 +444,7 @@ const CustomerDashboard = () => {
           </div>
 
           {/* Account Settings */}
-          <Card className="border-border bg-card/30 backdrop-blur-xl">
+          {/* <Card className="border-border bg-card/30 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Settings className="w-6 h-6 text-primary" />
@@ -474,7 +474,7 @@ const CustomerDashboard = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </section>
 
