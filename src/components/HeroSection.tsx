@@ -12,7 +12,7 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              Revolutionise Your business's Communication with AI
+              Revolutionise Your businesses Communication with AI
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               businessAI helps the average business recover 6-figures per year in lost revenue by ensuring every call is answered through AI — instantly, intelligently, and around the clock.
