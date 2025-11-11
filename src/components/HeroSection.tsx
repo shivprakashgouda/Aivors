@@ -25,13 +25,23 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
               >
                 Book A Demo
               </Button>
-              <Button
+              {/* <Button
                 size="lg"
                 variant="outline"
                 className="border-border bg-card hover:bg-muted text-foreground text-lg px-8 h-14"
               >
                 Test How Our AI call works
-              </Button>
+              </Button> */}
+              <a href="tel:+18327804868">
+  <Button
+    size="lg"
+    variant="outline"
+    className="border-border bg-card hover:bg-muted text-foreground text-lg px-8 h-14"
+  >
+    Test How Our AI Call Works
+  </Button>
+</a>
+
             </div>
             <div className="flex items-center gap-4 pt-4">
               <div className="flex -space-x-2">
