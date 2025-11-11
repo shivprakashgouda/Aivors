@@ -11,18 +11,18 @@ const plansData = [
   {
     name: "Starter",
     monthly: {
-      price: "$29",
+      price: "$50",
       originalPrice: null,
       priceId: "price_starter_monthly",
       discount: null,
     },
     yearly: {
-      price: "$290",
-      originalPrice: "$348",
+      price: "$500",
+      originalPrice: "$600",
       priceId: "price_starter_yearly",
       discount: "-17%",
     },
-    minutes: "50 mins",
+    minutes: "100 mins",
     concurrentCalls: "5 Concurrent Calls",
     workflows: null,
     icon: Zap,
