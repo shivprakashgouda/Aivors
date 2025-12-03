@@ -318,7 +318,7 @@ export const PricingSection = () => {
                   {/* Plan Name */}
                   <h3 className="text-xl font-bold mb-3 text-center">{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mb-4 text-center min-h-[40px]">
-                    {plan.name === "Starter" && "For developing and launching your AI voice agent"}
+                    {plan.name === "Starter" && "The Starter plan is for developing and launching your AI voice agent"}
                     {plan.name === "Pro" && "Self-serve for businesses with low call volumes"}
                     {plan.name === "Growth" && "Self-serve for businesses with higher call volumes"}
                     {plan.name === "Agency" && "White label platform for agencies and resellers"}
