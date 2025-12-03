@@ -12,7 +12,7 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              Revolutionize Your business Communication with AI
+              Revolutionize your business communication with AI
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Aivors AI helps the average business recover 6-figures per year in lost revenue by ensuring every call is answered through AI — instantly, intelligently, and around the clock.
@@ -23,14 +23,14 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
                 onClick={onBookDemoClick}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-lg px-8 h-14"
               >
-                Book A Demo
+                Book a demo
               </Button>
               {/* <Button
                 size="lg"
                 variant="outline"
                 className="border-border bg-card hover:bg-muted text-foreground text-lg px-8 h-14"
               >
-                Test How Our AI call works
+                Test how our AI call works
               </Button> */}
               <a href="tel:+18327804868">
   <Button
@@ -38,7 +38,7 @@ export const HeroSection = ({ onBookDemoClick }: HeroSectionProps) => {
     variant="outline"
     className="border-border bg-card hover:bg-muted text-foreground text-lg px-8 h-14"
   >
-    Test How Our AI Call Works
+    Test how our AI call works
   </Button>
 </a>
 
