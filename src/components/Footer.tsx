@@ -29,9 +29,9 @@ export const Footer = ({ onBookDemoClick }: FooterProps) => {
           <div>
             <h3 className="font-bold mb-4">CONTACT</h3>
             <div className="space-y-2 text-muted-foreground">
-              <p>Phone: +18 327804868</p>
-              <p>Support: info@business-ai.com</p>
-              <p>Looking to invest: invest@business-ai.com</p>
+              <p>Phone: +1 (409)960-2907</p>
+              <p>Support: info@aivors.com</p>
+              <p>Looking to invest: info@aivors.com</p>
             </div>
           </div>
 
@@ -55,7 +55,7 @@ export const Footer = ({ onBookDemoClick }: FooterProps) => {
               onClick={onBookDemoClick}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
-              Book A Demo
+              Book a demo
             </Button>
           </div>
         </div>
