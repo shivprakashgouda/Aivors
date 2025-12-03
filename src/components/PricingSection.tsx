@@ -175,7 +175,7 @@ export const PricingSection = () => {
     // For Enterprise, redirect to contact
     if (planName === "Enterprise") {
       // You can replace this with your contact form or email
-      window.location.href = "mailto:contact@yourcompany.com?subject=Enterprise Plan Inquiry";
+      window.location.href = "mailto:info@aivors.com?subject=Enterprise Plan Inquiry";
       return;
     }
 
@@ -247,7 +247,7 @@ export const PricingSection = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            Pricing That Scales <span className="text-primary">With You</span>
+            Pricing that scales <span className="text-primary">With You</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             As your business expands, our pricing adjusts to match your evolving needs, ensuring cost-efficiency without compromise
