@@ -3,33 +3,33 @@ import { Phone, DollarSign, Calendar, CheckCircle, Utensils, Settings } from "lu
 const features = [
   {
     icon: Phone,
-    title: "Never Miss An Order",
+    title: "Never miss an order",
     description: "AI answers every call 24/7, so you never miss an opportunity to turn a customer inquiry into a sale.",
   },
   {
     icon: DollarSign,
-    title: "Increase Your AOV",
+    title: "Increase your AOV",
     description: "Trained on your menu, AI will suggest pairings to each customer based on their order to increase average order value.",
   },
   {
     icon: Calendar,
-    title: "Take Bookings & Triage Events",
+    title: "Take bookings & triage events",
     description: "AI handles all reservations and event inquiries—confirming, updating, or cancelling bookings—so no customer gets missed.",
   },
   {
     icon: CheckCircle,
-    title: "Take Delivery & Takeout Orders",
+    title: "Take delivery & takeout orders",
     description: "Every delivery and takeout call is handled with pinpoint accuracy—no errors, no confusion. Smart upsells run in the background, increasing order value effortlessly.",
   },
   {
     icon: Utensils,
-    title: "Plug Into Your POS",
-    description: "With 45+ POS integrations, businessAI sends every order straight to your system—no manual input, no missed steps, and you'll never hear the phone ring again.",
+    title: "Plug into your POS",
+    description: "With 45+ POS integrations, Aivors AI sends every order straight to your system—no manual input, no missed steps, and you'll never hear the phone ring again.",
   },
   {
     icon: Settings,
     title: "Your next superhuman employee",
-    description: "Trained to talk like your best employee. Built to work like ten. businessAI handles your phones with speed, memory, and perfect accuracy—24/7.",
+    description: "Trained to talk like your best employee. Built to work like ten. Aivors AI handles your phones with speed, memory, and perfect accuracy—24/7.",
   },
 ];
 
@@ -39,10 +39,10 @@ export const FeaturesSection = () => {
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            Unlock the <span className="text-primary">profits</span> in your business's operations
+            Unlock the <span className="text-primary">profits</span> in your business operations
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            With businessAI your staff can focus their time and energy on in-person customers, while never having to worry about the phone ringing again.
+            With Aivors AI your staff can focus their time and energy on in-person customers, while never having to worry about the phone ringing again.
           </p>
         </div>
         
