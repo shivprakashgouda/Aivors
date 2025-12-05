@@ -54,9 +54,12 @@ const createTransporter = () => {
   }
 
   try {
-    const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-    const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASSWORD;
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const isResendSMTP = smtpHost.includes('resend.com');
+    
+    // For Resend SMTP: username = "resend", password = RESEND_API_KEY
+    const smtpUser = isResendSMTP ? 'resend' : (process.env.SMTP_USER || process.env.EMAIL_USER);
+    const smtpPass = isResendSMTP ? process.env.RESEND_API_KEY : (process.env.SMTP_PASS || process.env.EMAIL_PASSWORD);
     const smtpPort = parseInt(process.env.SMTP_PORT || '587');
     const smtpSecure = smtpPort === 465;
 
@@ -516,9 +519,136 @@ Submitted: ${new Date().toLocaleString()}`,
   }
 };
 
+const sendPasswordResetEmail = async (email, resetToken, name) => {
+  console.log('\n📤 ========== SENDING PASSWORD RESET EMAIL ==========');
+  console.log('To:', email);
+  console.log('Name:', name);
+  console.log('=========================================\n');
+
+  try {
+    const transporter = createTransporter();
+    
+    // Test mode
+    if (!transporter) {
+      console.log('\n📧 ============ PASSWORD RESET EMAIL (TEST MODE) ============');
+      console.log(`To: ${email}`);
+      console.log(`Name: ${name}`);
+      console.log(`Reset Token: ${resetToken}`);
+      console.log(`Reset Link: ${process.env.CLIENT_URL}/reset-password?token=${resetToken}`);
+      console.log('============================================\n');
+      return { success: true, mode: 'test' };
+    }
+
+    // Determine from email
+    let fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER || 'noreply@aivors.com';
+    const fromName = process.env.EMAIL_FROM_NAME || 'Aivors';
+    
+    // Use APP_BASE_URL (production) with fallbacks for backward compatibility
+    const baseUrl = (process.env.APP_BASE_URL || process.env.CLIENT_URL || 'https://www.aivors.com').replace(/\/$/, '');
+    const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+    
+    // aivors.com domain is now verified in Resend - use configured email directly
+    console.log(`📧 Sending password reset email from: ${fromEmail}`);
+    
+
+    // Use Resend API
+    if (transporter === 'RESEND') {
+      const resend = createResendClient();
+      console.log('📤 Sending password reset email via Resend API...');
+      
+      const { data, error } = await resend.emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: [email],
+        subject: 'Reset Your Password - Aivors',
+        html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Password Reset Request 🔐</h1>
+  </div>
+  <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+    <h2 style="color: #667eea; margin-top: 0;">Hi ${name}!</h2>
+    <p>We received a request to reset your password for your Aivors account.</p>
+    <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${resetLink}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+    </div>
+    <p style="color: #666; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+    <p style="word-break: break-all; background: white; padding: 10px; border-radius: 5px; font-size: 12px; color: #667eea;">${resetLink}</p>
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+    <p style="color: #666; font-size: 14px;">If you didn't request a password reset, please ignore this email. Your password will remain unchanged.</p>
+    <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+      © ${new Date().getFullYear()} Aivors. All rights reserved.<br>
+      This is an automated email, please do not reply.
+    </p>
+  </div>
+</body>
+</html>`,
+        text: `Hi ${name},\n\nWe received a request to reset your password for your Aivors account.\n\nClick the link below to reset your password (expires in 1 hour):\n${resetLink}\n\nIf you didn't request a password reset, please ignore this email.\n\n© ${new Date().getFullYear()} Aivors. All rights reserved.`,
+      });
+
+      if (error) {
+        console.error('\n❌ ========== RESEND API ERROR ==========');
+        console.error('Error:', error);
+        console.error('========================================\n');
+        
+        console.log('\n⚠️  ========== EMAIL FAILED - RESET LINK FOR TESTING ==========');
+        console.log(`   Email: ${email}`);
+        console.log(`   Reset Link: ${resetLink}`);
+        console.log(`   Name: ${name}`);
+        console.log('=========================================================\n');
+        
+        return { success: false, error: error.message };
+      }
+
+      console.log('\n✅ ========== EMAIL SENT VIA RESEND ==========');
+      console.log('   Email ID:', data.id);
+      console.log('============================================\n');
+
+      return { success: true, messageId: data.id, provider: 'resend' };
+    }
+
+    // Use SMTP
+    const mailOptions = {
+      from: `"${fromName}" <${fromEmail}>`,
+      to: email,
+      subject: 'Reset Your Password - Aivors',
+      html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2>Password Reset Request</h2>
+  <p>Hi ${name},</p>
+  <p>Click the link below to reset your password (expires in 1 hour):</p>
+  <p><a href="${resetLink}" style="background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+  <p>Or copy this link: ${resetLink}</p>
+  <p>If you didn't request this, please ignore this email.</p>
+</body>
+</html>`,
+      text: `Hi ${name},\n\nClick the link to reset your password: ${resetLink}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
+    };
+
+    console.log('📤 Sending password reset email via SMTP...');
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log('\n✅ ========== EMAIL SENT VIA SMTP ==========');
+    console.log('   Message ID:', info.messageId);
+    console.log('==========================================\n');
+
+    return { success: true, messageId: info.messageId, provider: 'smtp' };
+  } catch (error) {
+    console.error('\n❌ ========== EMAIL SENDING FAILED ==========');
+    console.error('Error Message:', error.message);
+    console.error('=============================================\n');
+    return { success: false, error: error.message, code: error.code };
+  }
+};
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
   sendWelcomeEmail,
   sendDemoBookingEmail,
+  sendPasswordResetEmail,
 };

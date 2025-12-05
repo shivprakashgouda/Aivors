@@ -11,6 +11,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import AdminLogin from "./pages/AdminLogin";
+import ResetPassword from "./pages/ResetPassword";
+import ForgotPasswordStandalone from "./pages/ForgotPasswordStandalone";
+import ResetPasswordStandalone from "./pages/ResetPasswordStandalone";
 import NotFound from "./pages/NotFound";
 import { PrivateRoute, AdminRoute } from "@/components/PrivateRoute";
 
@@ -31,6 +34,9 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/business-dashboard" element={<PrivateRoute><BusinessDashboard /></PrivateRoute>} />
             <Route path="/checkout-success" element={<CheckoutSuccess />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<ForgotPasswordStandalone />} />
+            <Route path="/reset-password-standalone" element={<ResetPasswordStandalone />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

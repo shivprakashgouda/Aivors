@@ -29,6 +29,8 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
   const [verificationEmail, setVerificationEmail] = useState("");
   const [otpValue, setOtpValue] = useState("");
   const [otpTimer, setOtpTimer] = useState(0);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   
   const { login, setUserFromVerification } = useAuth();
   const navigate = useNavigate();
@@ -142,6 +144,33 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
     setShowOTPVerification(false);
     setOtpValue("");
     setVerificationEmail("");
+    setShowForgotPassword(false);
+    setResetEmail("");
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      await authAPI.requestReset({ email: resetEmail });
+      toast.success("Password reset link sent! Check your email (including spam folder).");
+      setShowForgotPassword(false);
+      setResetEmail("");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || "Failed to send reset link";
+      const details = error.response?.data?.details;
+      
+      if (details) {
+        toast.error(`${errorMessage}. ${details}`);
+      } else {
+        toast.error(errorMessage);
+      }
+      
+      console.error('Password reset error:', error.response?.data);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -154,7 +183,50 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
           <X className="h-4 w-4" />
         </button>
 
-        {showOTPVerification ? (
+        {showForgotPassword ? (
+          // Forgot Password Screen
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-center">Reset Password</DialogTitle>
+              <DialogDescription className="text-center text-muted-foreground">
+                Enter your email address and we'll send you a password reset link
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleForgotPassword} className="space-y-6 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email" className="text-foreground">Email Address</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="bg-background border-border focus:border-primary"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-12"
+              >
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={handleBackToLogin}
+                className="w-full"
+                type="button"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Login
+              </Button>
+            </form>
+          </>
+        ) : showOTPVerification ? (
           // OTP Verification Screen
           <>
             <DialogHeader>
@@ -255,6 +327,16 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
                       className="bg-background border-border focus:border-primary"
                       required
                     />
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-primary hover:text-primary/80 p-0 h-auto text-sm"
+                      >
+                        Forgot Password?
+                      </Button>
+                    </div>
                   </div>
                   <Button
                     type="submit"

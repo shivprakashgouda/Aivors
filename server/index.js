@@ -28,6 +28,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Routes
 const authRoutes = require('./routes/auth');
+const authResetRoutes = require('./routes/authReset');
 const adminRoutes = require('./routes/admin');
 const subscriptionRoutes = require('./routes/subscription');
 const dashboardRoutes = require('./routes/dashboard');
@@ -50,13 +51,25 @@ app.use(helmet({
 }));
 // CORS with allowed origins list (supports Vite defaults)
 const defaultClient = process.env.CLIENT_URL || 'http://localhost:8080';
-const allowed = (process.env.CORS_ORIGINS || `${defaultClient},https://www.aivors.com,https://aivors-1.onrender.com,https://aivors-5hvj.onrender.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`)
+const defaultOrigins = `${defaultClient},https://www.aivors.com,https://aivors-1.onrender.com,https://aivors-5hvj.onrender.com,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000`;
+const allowed = (process.env.CORS_ORIGINS || defaultOrigins)
   .split(',')
   .map(origin => origin.trim());
+
+// In development, allow all localhost origins automatically
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true); // allow non-browser tools
+    
+    // In development, allow all localhost and 127.0.0.1 origins
+    if (isDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      return callback(null, true);
+    }
+    
     if (allowed.includes(origin)) return callback(null, true);
+    
     console.log(`❌ CORS blocked for origin: ${origin}. Allowed origins:`, allowed);
     return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
@@ -90,6 +103,8 @@ app.use((req, res, next) => {
   // - /api/auth/signup: New user registration, no prior session
   // - /api/auth/verify-otp: OTP verification for new users
   // - /api/auth/resend-otp: OTP resend for new users
+  // - /api/auth/request-reset: Password reset request, email-based verification
+  // - /api/auth/reset-password: Password reset with token, no session exists
   // - /api/demo/*: Demo booking with OTP verification
   // - /api/admin/*: All admin endpoints protected by authGuard + adminGuard
   // - /api/dashboard: Protected by authGuard
@@ -102,6 +117,9 @@ app.use((req, res, next) => {
     || req.path === '/api/auth/signup'
     || req.path === '/api/auth/verify-otp'
     || req.path === '/api/auth/resend-otp'
+    || req.path === '/api/auth/request-reset'
+    || req.path === '/api/auth/reset-password'
+    || req.path === '/api/auth/request-password-reset' // New standalone endpoint
     || req.path.startsWith('/api/demo')
     || req.path.startsWith('/api/admin')
     || req.path.startsWith('/api/dashboard')
@@ -130,6 +148,7 @@ app.use('/api', apiLimiter);
 
 // Mount routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', authResetRoutes); // Password reset routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -653,6 +672,9 @@ app.listen(PORT, () => {
   console.log(`   - POST http://localhost:${PORT}/api/auth/login`);
   console.log(`   - POST http://localhost:${PORT}/api/auth/logout`);
   console.log(`   - GET  http://localhost:${PORT}/api/auth/me`);
+  console.log(`   - POST http://localhost:${PORT}/api/auth/request-reset`);
+  console.log(`   - POST http://localhost:${PORT}/api/auth/reset-password`);
+  console.log(`   - POST http://localhost:${PORT}/api/auth/request-password-reset`);
   console.log(`\n   Admin:`);
   console.log(`   - POST http://localhost:${PORT}/api/admin/login`);
   console.log(`   - GET  http://localhost:${PORT}/api/admin/users`);

@@ -95,6 +95,16 @@ export const authAPI = {
     const response = await api.post('/api/auth/refresh');
     return response.data;
   },
+
+  requestReset: async (data: { email: string }) => {
+    const response = await api.post('/api/auth/request-reset', data);
+    return response.data;
+  },
+
+  resetPassword: async (data: { token: string; password: string }) => {
+    const response = await api.post('/api/auth/reset-password', data);
+    return response.data;
+  },
 };
 
 // Admin API
