@@ -239,7 +239,11 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation onSignInClick={() => setAuthModalOpen(true)} onBookDemoClick={() => {}} />
+      <Navigation 
+        onSignInClick={() => setAuthModalOpen(true)} 
+        onSignUpClick={() => setAuthModalOpen(true)}
+        onBookDemoClick={() => {}} 
+      />
       
       <section className="pt-32 pb-20 px-6">
         <div className="container mx-auto">

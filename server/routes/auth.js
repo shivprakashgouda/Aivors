@@ -198,19 +198,25 @@ router.post('/verify-otp', async (req, res) => {
     const cookieBase = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      path: '/',  // Ensure cookies are sent with all requests
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     };
     
     console.log('🍪 Setting cookies with config:', {
       ...cookieBase,
+      accessMaxAge: 15 * 60 * 1000,
+      refreshMaxAge: 7 * 24 * 60 * 60 * 1000,
       nodeEnv: process.env.NODE_ENV,
       origin: req.get('origin'),
+      host: req.get('host'),
     });
     
     res.cookie('access_token', access, { ...cookieBase, maxAge: 15 * 60 * 1000 });
     res.cookie('refresh_token', refresh, { ...cookieBase, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     console.log('✅ Sending success response');
+    console.log('🔐 Tokens set for user:', user._id);
+    console.log('📧 Response will include Set-Cookie headers');
     console.log('================================================\n');
     
     res.json({
@@ -337,17 +343,21 @@ router.post('/login', async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',  // Ensure cookies are sent with all requests
     };
     
     console.log('🍪 Login: Setting cookies with config:', {
       ...cookieBase,
       nodeEnv: process.env.NODE_ENV,
       origin: req.get('origin'),
+      host: req.get('host'),
       userId: user._id.toString(),
     });
     
     res.cookie('access_token', access, { ...cookieBase, maxAge: 15 * 60 * 1000 });
     res.cookie('refresh_token', refresh, { ...cookieBase, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    
+    console.log('✅ Cookies set - access_token (15min) and refresh_token (7days)');
 
     res.json({
       message: 'Login successful',
@@ -398,23 +408,46 @@ router.get('/me', authGuard, async (req, res) => {
 // POST /api/auth/refresh - rotate access token using refresh cookie
 router.post('/refresh', async (req, res) => {
   try {
+    console.log('\n🔄 ========== TOKEN REFRESH REQUEST ==========');
+    console.log('Cookies present:', Object.keys(req.cookies || {}));
+    
     const refresh = req.cookies?.refresh_token;
-    if (!refresh) return res.status(401).json({ error: 'Unauthorized', message: 'No refresh token' });
-
+    if (!refresh) {
+      console.log('❌ No refresh token in cookies');
+      return res.status(401).json({ error: 'Unauthorized', message: 'No refresh token' });
+    }
+    
+    console.log('✅ Refresh token found, verifying...');
     const decoded = verifyRefreshToken(refresh);
-    if (!decoded) return res.status(401).json({ error: 'Unauthorized', message: 'Invalid refresh token' });
+    if (!decoded) {
+      console.log('❌ Invalid refresh token');
+      return res.status(401).json({ error: 'Unauthorized', message: 'Invalid refresh token' });
+    }
 
+    console.log('✅ Refresh token valid, looking up user:', decoded.userId);
     const user = await User.findById(decoded.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      console.log('❌ User not found:', decoded.userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
 
+    console.log('✅ Generating new access token...');
     const access = signAccessToken(user._id.toString(), user.role);
-    res.cookie('access_token', access, {
+    
+    const cookieConfig = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
       maxAge: 15 * 60 * 1000,
-    });
-    return res.json({ success: true });
+    };
+    
+    console.log('🍪 Setting new access_token cookie:', cookieConfig);
+    res.cookie('access_token', access, cookieConfig);
+    
+    console.log('✅ Access token refreshed successfully for user:', user._id);
+    console.log('================================================\n');
+    return res.json({ success: true, message: 'Token refreshed' });
   } catch (error) {
     console.error('Refresh error:', error);
     return res.status(500).json({ error: 'Server error during refresh' });

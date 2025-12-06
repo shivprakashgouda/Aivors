@@ -36,7 +36,28 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for debugging
+// Response interceptor with automatic token refresh on 401
+let isRefreshing = false;
+let refreshAttempts = 0;
+const MAX_REFRESH_ATTEMPTS = 1; // Only try once to prevent infinite loops
+let failedQueue: Array<{ resolve: (value?: any) => void; reject: (reason?: any) => void }> = [];
+
+const processQueue = (error: any = null) => {
+  failedQueue.forEach(promise => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
+// Reset refresh attempts after successful auth
+const resetRefreshAttempts = () => {
+  refreshAttempts = 0;
+};
+
 api.interceptors.response.use(
   (response) => {
     console.log(`🟢 API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
@@ -45,7 +66,9 @@ api.interceptors.response.use(
     });
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
     console.error('🔴 API Error:', {
       url: error.config?.url,
       method: error.config?.method,
@@ -54,7 +77,57 @@ api.interceptors.response.use(
       data: error.response?.data,
       isNetworkError: error.message === 'Network Error',
       isCORS: error.message.includes('CORS'),
+      requiresAuth: error.response?.data?.requiresAuth,
+      tokenExpired: error.response?.data?.tokenExpired,
     });
+
+    // Handle 401 errors with automatic token refresh (except for auth endpoints)
+    if (error.response?.status === 401 && 
+        !originalRequest._retry && 
+        !originalRequest.url?.includes('/api/auth/login') &&
+        !originalRequest.url?.includes('/api/auth/signup') &&
+        !originalRequest.url?.includes('/api/auth/refresh') &&
+        refreshAttempts < MAX_REFRESH_ATTEMPTS) {
+      
+      if (isRefreshing) {
+        // Queue requests while refresh is in progress
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+      refreshAttempts++;
+
+      console.log(`🔄 Attempting automatic token refresh (attempt ${refreshAttempts}/${MAX_REFRESH_ATTEMPTS})...`);
+      
+      try {
+        await authAPI.refresh();
+        console.log('✅ Token refreshed successfully, retrying original request');
+        resetRefreshAttempts(); // Reset on success
+        processQueue();
+        isRefreshing = false;
+        return api(originalRequest);
+      } catch (refreshError: any) {
+        console.error('❌ Token refresh failed, user needs to login again');
+        processQueue(refreshError);
+        isRefreshing = false;
+        
+        // If we've hit max attempts, clear auth state
+        if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+          console.log('🚫 Max refresh attempts reached, clearing auth state');
+          // Redirect to login or clear auth - let the app handle it
+        }
+        
+        return Promise.reject(error);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
@@ -78,6 +151,7 @@ export const authAPI = {
 
   login: async (data: { email: string; password: string }) => {
     const response = await api.post('/api/auth/login', data);
+    resetRefreshAttempts(); // Reset on successful login
     return response.data;
   },
 

@@ -1,13 +1,16 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
-// Log critical environment variables (for debugging)
-console.log('🔧 Environment Check:');
-console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
-console.log('  MONGO_URI:', process.env.MONGO_URI ? '✅ Set' : '❌ Missing');
-console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '✅ Set' : '❌ Missing (using fallback)');
-console.log('  CLIENT_URL:', process.env.CLIENT_URL || 'http://localhost:8080 (default)');
-console.log('  CORS_ORIGINS:', process.env.CORS_ORIGINS ? '✅ Set' : 'Using defaults');
+// Validate environment variables before starting server
+const { validateEnvironment } = require('./utils/envValidator');
+try {
+  validateEnvironment();
+} catch (error) {
+  console.error('❌ Environment validation failed:', error.message);
+  console.error('   → Please check your .env file and ensure all required variables are set');
+  console.error('   → See server/.env.example for reference');
+  process.exit(1);
+}
 
 const express = require('express');
 const cors = require('cors');
@@ -61,19 +64,33 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser tools
+    // Log CORS check for debugging
+    console.log(`🌍 CORS Check - Origin: ${origin || 'none (server-side/tool)'}`);
+    
+    if (!origin) {
+      console.log('   ✅ Allowed: No origin header (server-side request)');
+      return callback(null, true); // allow non-browser tools
+    }
     
     // In development, allow all localhost and 127.0.0.1 origins
     if (isDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      console.log('   ✅ Allowed: Development localhost origin');
       return callback(null, true);
     }
     
-    if (allowed.includes(origin)) return callback(null, true);
+    if (allowed.includes(origin)) {
+      console.log('   ✅ Allowed: Origin in whitelist');
+      return callback(null, true);
+    }
     
-    console.log(`❌ CORS blocked for origin: ${origin}. Allowed origins:`, allowed);
+    console.log(`   ❌ BLOCKED: Origin not in whitelist`);
+    console.log(`   → Requested origin: ${origin}`);
+    console.log(`   → Allowed origins: ${allowed.join(', ')}`);
+    console.log(`   → Add to CORS_ORIGINS env var or CLIENT_URL to fix`);
     return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
   credentials: true,
+  exposedHeaders: ['Set-Cookie'], // Ensure cookies are exposed to client
 }));
 app.use(cookieParser());
 // Stripe webhook needs raw body BEFORE express.json
@@ -164,6 +181,65 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     mongodb: require('mongoose').connection.readyState === 1 ? 'connected' : 'disconnected',
     email: process.env.EMAIL_SERVICE ? 'configured' : 'not configured'
+  });
+});
+
+// Debug auth status endpoint - helps diagnose 401 errors
+app.get('/api/debug/auth-status', (req, res) => {
+  const hasAccessToken = !!req.cookies?.access_token;
+  const hasRefreshToken = !!req.cookies?.refresh_token;
+  const cookieHeader = req.get('cookie');
+  
+  res.json({
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    request: {
+      origin: req.get('origin'),
+      referer: req.get('referer'),
+      host: req.get('host'),
+      protocol: req.protocol,
+      secure: req.secure,
+      ip: req.ip,
+    },
+    cookies: {
+      hasCookieHeader: !!cookieHeader,
+      hasAccessToken,
+      hasRefreshToken,
+      cookieNames: Object.keys(req.cookies || {}),
+      cookieCount: Object.keys(req.cookies || {}).length,
+    },
+    server: {
+      trustProxy: req.app.get('trust proxy'),
+      nodeEnv: process.env.NODE_ENV,
+      hasClientUrl: !!process.env.CLIENT_URL,
+      hasCorsOrigins: !!process.env.CORS_ORIGINS,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+    },
+    authentication: {
+      isAuthenticated: hasAccessToken,
+      canRefresh: hasRefreshToken,
+      nextStep: !hasAccessToken && !hasRefreshToken 
+        ? 'Login required - no tokens found' 
+        : !hasAccessToken && hasRefreshToken 
+        ? 'Call /api/auth/refresh to get new access token'
+        : 'Access token present - should be authenticated',
+    },
+    help: {
+      commonIssues: [
+        'CORS: Check origin is in CORS_ORIGINS or CLIENT_URL',
+        'Cookies: Verify domain matches between frontend and backend',
+        'HTTPS: In production, both frontend and backend must use HTTPS',
+        'SameSite: In production with cross-domain, cookies use SameSite=none',
+        'Environment: Check NODE_ENV matches deployment environment',
+      ],
+      debugSteps: [
+        '1. Check browser DevTools > Application > Cookies',
+        '2. Verify access_token and refresh_token are present',
+        '3. Check cookie domain and path are correct',
+        '4. Verify CORS headers in Network tab',
+        '5. Check server logs for authGuard debug output',
+      ],
+    },
   });
 });
 

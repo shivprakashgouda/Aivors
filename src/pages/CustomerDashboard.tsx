@@ -89,8 +89,13 @@ const CustomerDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
     
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchDashboardData, 5000);
+    // Auto-refresh every 30 seconds (reduced from 5s to minimize server load)
+    // Only refresh if component is still mounted
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchDashboardData();
+      }
+    }, 30000); // 30 seconds instead of 5
     
     return () => clearInterval(interval);
   }, []);
@@ -163,7 +168,11 @@ const CustomerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation onSignInClick={() => {}} onBookDemoClick={() => {}} />
+      <Navigation 
+        onSignInClick={() => {}} 
+        onSignUpClick={() => {}}
+        onBookDemoClick={() => {}} 
+      />
 
       <section className="pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-7xl">

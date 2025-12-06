@@ -147,6 +147,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navigation 
         onSignInClick={() => {}} 
+        onSignUpClick={() => {}}
         onBookDemoClick={() => {}}
       />
       

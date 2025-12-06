@@ -12,10 +12,11 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface NavigationProps {
   onSignInClick: () => void;
+  onSignUpClick: () => void;
   onBookDemoClick: () => void;
 }
 
-export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) => {
+export const Navigation = ({ onSignInClick, onSignUpClick, onBookDemoClick }: NavigationProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
@@ -44,7 +45,7 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-16 absolute left-1/2 transform -translate-x-1/2">
             {isHomePage ? (
               <>
                 <a
@@ -70,13 +71,13 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
               <>
                 <Link
                   to="/"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-lg text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Home
                 </Link>
                 <Link
                   to="/pricing"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-lg text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Pricing
                 </Link>
@@ -87,7 +88,7 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
             {isAuthenticated && (
               <Link
                 to="/dashboard"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-lg text-muted-foreground hover:text-foreground transition-colors"
               >
                 My Account
               </Link>
@@ -129,6 +130,14 @@ export const Navigation = ({ onSignInClick, onBookDemoClick }: NavigationProps) 
                   className="text-foreground hover:bg-muted"
                 >
                   Sign In
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  onClick={onSignUpClick}
+                  className="text-foreground hover:bg-muted"
+                >
+                  Sign Up
                 </Button>
 
                 {/* Show Book A Demo only when not signed in */}

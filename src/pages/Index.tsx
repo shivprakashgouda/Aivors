@@ -11,11 +11,19 @@ import { BookDemoModal } from "@/components/BookDemoModal";
 const Index = () => {
   const [signInOpen, setSignInOpen] = useState(false);
   const [bookDemoOpen, setBookDemoOpen] = useState(false);
+  const [initialTab, setInitialTab] = useState<'signin' | 'signup'>('signin');
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation 
-        onSignInClick={() => setSignInOpen(true)}
+        onSignInClick={() => {
+          setInitialTab('signin');
+          setSignInOpen(true);
+        }}
+        onSignUpClick={() => {
+          setInitialTab('signup');
+          setSignInOpen(true);
+        }}
         onBookDemoClick={() => setBookDemoOpen(true)}
       />
       <HeroSection onBookDemoClick={() => setBookDemoOpen(true)} />
@@ -24,7 +32,7 @@ const Index = () => {
       <FAQSection onBookDemoClick={() => setBookDemoOpen(true)} />
       <Footer onBookDemoClick={() => setBookDemoOpen(true)} />
       
-      <SignInModal open={signInOpen} onOpenChange={setSignInOpen} />
+      <SignInModal open={signInOpen} onOpenChange={setSignInOpen} initialTab={initialTab} />
       <BookDemoModal open={bookDemoOpen} onOpenChange={setBookDemoOpen} />
     </div>
   );
