@@ -321,6 +321,187 @@ router.post('/analytics/update', verifyN8NSecret, async (req, res) => {
 });
 
 /**
+ * POST /api/n8n/retell-webhook
+ * 
+ * Receives Retell AI call events from n8n workflow
+ * Processes call_analyze events and updates call analytics
+ * 
+ * Expected payload from Retell AI (via n8n):
+ * {
+ *   event_type: 'call_analyze',
+ *   call_id: string,
+ *   user_id: string (or email),
+ *   phone_number: string,
+ *   duration_seconds: number,
+ *   transcript: string,
+ *   summary: string,
+ *   metadata: object
+ * }
+ */
+router.post('/retell-webhook', async (req, res) => {
+  try {
+    const { Call, Subscription, User } = require('../models');
+    const { 
+      extractCallData, 
+      formatResponse, 
+      formatError, 
+      getSubscriptionFlags,
+      getOrCreateSubscription 
+    } = require('../utils/helpers');
+
+    console.log('📞 [RETELL WEBHOOK] Received:', JSON.stringify(req.body, null, 2));
+
+    // Validate event type - only process call_analyze
+    const eventType = req.body.event_type || req.body.eventType;
+    if (eventType !== 'call_analyze') {
+      console.log(`⏭️  [RETELL WEBHOOK] Skipping event: ${eventType} (not call_analyze)`);
+      return res.json({
+        success: true,
+        message: `Event type "${eventType}" ignored. Only processing "call_analyze" events.`,
+        skipped: true,
+        eventType
+      });
+    }
+
+    // Extract call data
+    const callData = extractCallData(req.body);
+    
+    if (!callData.callId) {
+      return res.status(400).json(
+        formatError('Missing required field: call_id', 400)
+      );
+    }
+
+    // Find user by userId or email
+    let userId = callData.userId;
+    if (!userId && req.body.email) {
+      const user = await User.findOne({ email: req.body.email });
+      if (user) {
+        userId = user._id.toString();
+      }
+    }
+
+    if (!userId) {
+      console.log('⚠️  [RETELL WEBHOOK] No userId found, using default test user');
+      userId = 'test_user_' + Date.now();
+    }
+
+    // Check for duplicate
+    const exists = await Call.callExists(callData.callId);
+    if (exists) {
+      console.log(`🔄 [RETELL WEBHOOK] Duplicate call ${callData.callId} - already processed`);
+      return res.json({
+        success: true,
+        message: 'Call already processed',
+        duplicate: true,
+        callId: callData.callId
+      });
+    }
+
+    // Save call to database
+    const call = await Call.create({
+      callId: callData.callId,
+      userId: userId,
+      phoneNumber: callData.phoneNumber,
+      durationSeconds: callData.durationSeconds,
+      durationMinutes: callData.durationMinutes,
+      transcript: callData.transcript,
+      summary: callData.summary,
+      eventType: callData.eventType,
+      metadata: callData.metadata,
+      callStartTime: callData.callStartTime,
+      callEndTime: callData.callEndTime,
+      status: 'completed'
+    });
+
+    console.log(`✅ [RETELL WEBHOOK] Call saved: ${call.callId} (${call.durationMinutes} min)`);
+
+    // Get or create subscription
+    const subscription = await getOrCreateSubscription(Subscription, userId);
+    
+    // Deduct credits
+    await subscription.deductCredits(callData.durationMinutes);
+    
+    console.log(`💳 [RETELL WEBHOOK] Credits deducted: ${callData.durationMinutes} min. Remaining: ${subscription.availableCredits}`);
+
+    // Get subscription flags
+    const subscriptionFlags = getSubscriptionFlags(subscription.availableCredits);
+
+    // Update user analytics if user exists
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        user.analytics.callsToday = (user.analytics.callsToday || 0) + 1;
+        user.analytics.aiStatus = 'Online';
+        
+        // Update subscription minutes in user model too
+        user.subscription.minutesRemaining = subscription.availableCredits;
+        user.subscription.minutesPurchased = subscription.totalCredits;
+        
+        // Add to recent activity
+        user.recentActivity.unshift({
+          text: `Call completed with ${callData.phoneNumber} (${callData.durationMinutes} min)`,
+          timeAgo: 'Just now',
+          createdAt: new Date()
+        });
+        
+        if (user.recentActivity.length > 10) {
+          user.recentActivity = user.recentActivity.slice(0, 10);
+        }
+        
+        await user.save();
+        console.log(`📊 [RETELL WEBHOOK] User analytics updated for ${user.email}`);
+      }
+    } catch (err) {
+      console.log('⚠️  Could not update user analytics:', err.message);
+    }
+
+    // Prepare response
+    const responseData = {
+      call: {
+        callId: call.callId,
+        userId: call.userId,
+        phoneNumber: call.phoneNumber,
+        durationMinutes: call.durationMinutes,
+        durationSeconds: call.durationSeconds,
+        transcriptLength: call.transcript.length,
+        summaryLength: call.summary.length,
+        createdAt: call.createdAt
+      },
+      subscription: {
+        availableCredits: subscription.availableCredits,
+        totalCredits: subscription.totalCredits,
+        usedCredits: subscription.usedCredits,
+        ...subscriptionFlags
+      },
+      alerts: {
+        shouldDisableWorkflow: subscriptionFlags.stopWorkflow,
+        shouldNotifyLowBalance: subscriptionFlags.lowBalance,
+        message: subscriptionFlags.stopWorkflow 
+          ? '⚠️ No credits remaining. Workflow should be disabled.'
+          : subscriptionFlags.lowBalance
+          ? `⚠️ Low balance: ${subscriptionFlags.creditsRemaining} minutes remaining`
+          : `✅ ${subscriptionFlags.creditsRemaining} minutes remaining`
+      }
+    };
+
+    console.log(`✨ [RETELL WEBHOOK] Processing complete. Remaining: ${subscription.availableCredits} min`);
+
+    return res.status(201).json(
+      formatResponse(true, 'Call analyzed and saved successfully', responseData)
+    );
+
+  } catch (error) {
+    console.error('❌ [RETELL WEBHOOK] Error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to process Retell webhook',
+      message: error.message
+    });
+  }
+});
+
+/**
  * GET /api/n8n/health
  * 
  * Health check endpoint for n8n monitoring

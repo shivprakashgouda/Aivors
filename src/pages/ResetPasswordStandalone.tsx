@@ -59,7 +59,7 @@ const ResetPasswordStandalone = () => {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       await axios.post(`${apiUrl}/api/auth/reset-password`, {
         email,
         token,

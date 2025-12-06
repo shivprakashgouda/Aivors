@@ -1,6 +1,15 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    unique: true,
+    index: true,
+    // Auto-generate userId from MongoDB _id if not provided
+    default: function() {
+      return this._id.toString();
+    }
+  },
   name: {
     type: String,
     required: true,

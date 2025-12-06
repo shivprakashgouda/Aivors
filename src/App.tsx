@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import CallAnalyticsDashboard from "./pages/CallAnalyticsDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/dashboard" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
+            <Route path="/call-analytics" element={<PrivateRoute><CallAnalyticsDashboard /></PrivateRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/business-dashboard" element={<PrivateRoute><BusinessDashboard /></PrivateRoute>} />

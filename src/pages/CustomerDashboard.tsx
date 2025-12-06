@@ -25,7 +25,7 @@ import { stripeAPI, subscriptionAPI } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 interface DashboardData {
   user: {
@@ -256,6 +256,21 @@ const CustomerDashboard = () => {
               </div>
 
               <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="p-5 rounded-xl border border-dashed border-blue-500/40 bg-gradient-to-r from-blue-500/10 to-transparent flex-1">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    📊 Call Analytics Dashboard
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    View detailed call transcripts, analytics, and credit usage
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/call-analytics')}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    View Call Analytics
+                  </Button>
+                </div>
+
                 <div className="p-5 rounded-xl border border-dashed border-primary/40 bg-gradient-to-r from-primary/10 to-transparent flex-1">
                   <h3 className="text-lg font-semibold mb-2">
                     Configure Your Second Business

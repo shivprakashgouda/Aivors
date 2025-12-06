@@ -1,9 +1,48 @@
 services:
+  # Backend API Server
+  - type: web
+    name: aivors-backend
+    runtime: node
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: PORT
+        value: 5000
+      - key: N8N_WEBHOOK_SECRET
+        value: aivors-secret
+      - key: RETELL_API_KEY
+        value: key_29e6b0fb2923804d5ea659aa04b0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+
+  # Frontend Static Site
   - type: web
     name: aivors-frontend
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
     routes:
       - type: rewrite
         source: /*

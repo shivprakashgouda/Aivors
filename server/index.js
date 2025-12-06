@@ -38,6 +38,11 @@ const dashboardRoutes = require('./routes/dashboard');
 const n8nRoutes = require('./routes/n8n');
 const demoRoutes = require('./routes/demo');
 
+// New routes for call analytics system
+const callRoutes = require('./routes/callRoutes');
+const subscriptionWebhookRoutes = require('./routes/subscriptionRoutes');
+const dashboardStatsRoutes = require('./routes/dashboardRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -140,6 +145,9 @@ app.use((req, res, next) => {
     || req.path.startsWith('/api/demo')
     || req.path.startsWith('/api/admin')
     || req.path.startsWith('/api/dashboard')
+    || req.path.startsWith('/api/n8n') // n8n webhook endpoints
+    || req.path.startsWith('/api/calls') // Call analytics endpoints
+    || req.path.startsWith('/api/subscription') // Subscription endpoints
     || req.path === '/api/create-checkout-session'
     || req.path === '/api/activate-subscription'
     || req.path === '/api/cancel-subscription'
@@ -168,9 +176,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/auth', authResetRoutes); // Password reset routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/n8n', n8nRoutes);
 app.use('/api/demo', demoRoutes);
+
+// Mount call analytics routes BEFORE general dashboard routes (order matters!)
+app.use('/api/calls', callRoutes);
+app.use('/api/subscription', subscriptionWebhookRoutes);
+app.use('/api/dashboard', dashboardStatsRoutes);
+
+// Mount general dashboard routes LAST (has catch-all /:userId route)
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
