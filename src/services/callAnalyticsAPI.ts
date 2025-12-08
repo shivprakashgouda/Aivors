@@ -124,6 +124,8 @@ export interface CallRecord {
   durationMinutes: number;
   transcriptPreview: string;
   summaryPreview: string;
+  transcript?: string; // Full transcript when expanded
+  summary?: string; // Full summary
   createdAt: string;
   status: string;
   timeAgo: string;

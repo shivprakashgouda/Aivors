@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, TrendingUp, Clock, Activity, AlertCircle } from "lucide-react";
+import { Phone, TrendingUp, Clock, Activity, AlertCircle, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import callAnalyticsAPI, { DashboardStatsData } from "@/services/callAnalyticsAPI";
+import callAnalyticsAPI, { DashboardStatsData, CallRecord } from "@/services/callAnalyticsAPI";
 
 const CallAnalyticsDashboard = () => {
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ const CallAnalyticsDashboard = () => {
   const { user, logout } = useAuth();
   const [statsData, setStatsData] = useState<DashboardStatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedCalls, setExpandedCalls] = useState<Set<string>>(new Set());
+  const [fullCallData, setFullCallData] = useState<Map<string, any>>(new Map());
 
   const fetchAnalytics = async () => {
     if (!user) return;
@@ -38,6 +40,37 @@ const CallAnalyticsDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleCallExpansion = async (callId: string) => {
+    const newExpanded = new Set(expandedCalls);
+    
+    if (newExpanded.has(callId)) {
+      newExpanded.delete(callId);
+      setExpandedCalls(newExpanded);
+    } else {
+      newExpanded.add(callId);
+      setExpandedCalls(newExpanded);
+      
+      // Fetch full call data if not already loaded
+      if (!fullCallData.has(callId)) {
+        try {
+          const response = await callAnalyticsAPI.getCallById(callId);
+          if (response.success) {
+            const newMap = new Map(fullCallData);
+            newMap.set(callId, response.data.call);
+            setFullCallData(newMap);
+          }
+        } catch (error) {
+          console.error('Failed to load call details:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load call transcript",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 
@@ -75,7 +108,7 @@ const CallAnalyticsDashboard = () => {
             <p className="text-muted-foreground">Start making calls to see your analytics here.</p>
           </div>
         </div>
-        <Footer />
+        <Footer onBookDemoClick={() => navigate('/demo')} />
       </div>
     );
   }
@@ -251,41 +284,85 @@ const CallAnalyticsDashboard = () => {
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {recentCalls.map((call) => (
-                    <div
-                      key={call.callId}
-                      className="flex items-start justify-between border-b pb-4 last:border-0"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{call.phoneNumber}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {call.durationMinutes} min
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {call.summaryPreview || 'No summary available'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {call.timeAgo}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          // Could navigate to call details page
-                          toast({
-                            title: "Call Details",
-                            description: `Call ID: ${call.callId}`,
-                          });
-                        }}
+                  {recentCalls.map((call) => {
+                    const isExpanded = expandedCalls.has(call.callId);
+                    const fullCall = fullCallData.get(call.callId);
+                    
+                    return (
+                      <div
+                        key={call.callId}
+                        className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
                       >
-                        View
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Phone className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-medium">{call.phoneNumber}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {call.durationMinutes} min
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {call.status}
+                              </Badge>
+                            </div>
+                            
+                            {/* Summary */}
+                            <div className="mb-2">
+                              <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                                <FileText className="w-3 h-3" />
+                                Summary
+                              </p>
+                              <p className="text-sm text-foreground">
+                                {call.summaryPreview || 'No summary available'}
+                              </p>
+                            </div>
+
+                            {/* Transcript Preview/Full */}
+                            {isExpanded && fullCall ? (
+                              <div className="mt-3 p-3 bg-muted/30 rounded-md border border-border">
+                                <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase">
+                                  Full Transcript
+                                </p>
+                                <div className="text-sm text-foreground whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                  {fullCall.transcript || 'No transcript available'}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="mt-2">
+                                <p className="text-xs text-muted-foreground">
+                                  {call.transcriptPreview?.substring(0, 100)}
+                                  {call.transcriptPreview?.length > 100 ? '...' : ''}
+                                </p>
+                              </div>
+                            )}
+
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {call.timeAgo} • Call ID: {call.callId}
+                            </p>
+                          </div>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleCallExpansion(call.callId)}
+                            className="ml-4"
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="w-4 h-4 mr-1" />
+                                Collapse
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4 mr-1" />
+                                Expand
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -293,7 +370,7 @@ const CallAnalyticsDashboard = () => {
         </div>
       </section>
 
-      <Footer />
+      <Footer onBookDemoClick={() => navigate('/demo')} />
     </div>
   );
 };
