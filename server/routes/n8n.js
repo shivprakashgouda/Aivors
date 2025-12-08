@@ -377,7 +377,8 @@ router.post('/retell-webhook', async (req, res) => {
     let user = null;
     
     // Try to find user by retellAgentId (agent_id from webhook)
-    const agentId = req.body.call?.agent_id || req.body.agent_id;
+    // Check multiple locations: nested in call object, or at root level, or extracted by helper
+    const agentId = callData.agentId || req.body.call?.agent_id || req.body.agent_id;
     if (agentId) {
       user = await User.findOne({ 'business.retellAgentId': agentId });
       if (user) {

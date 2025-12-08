@@ -124,20 +124,23 @@ const parseDuration = (event) => {
  * @returns {object} Formatted call data
  */
 const extractCallData = (event) => {
-  const { durationSeconds, durationMinutes } = parseDuration(event);
+  // Handle both nested (Retell format) and flat formats
+  const callData = event.call || event;
+  const { durationSeconds, durationMinutes } = parseDuration(callData);
   
   return {
-    callId: event.call_id || event.callId,
-    userId: event.user_id || event.userId,
-    phoneNumber: event.phone_number || event.phoneNumber || 'Unknown',
+    callId: callData.call_id || callData.callId || event.call_id || event.callId,
+    userId: callData.user_id || callData.userId || event.user_id || event.userId,
+    phoneNumber: callData.from_number || callData.phone_number || callData.phoneNumber || 'Unknown',
     durationSeconds,
     durationMinutes,
-    transcript: event.transcript || '',
-    summary: event.summary || '',
-    eventType: event.event_type || event.eventType || 'call_analyze',
-    metadata: event.metadata || {},
-    callStartTime: event.call_start_time || event.callStartTime,
-    callEndTime: event.call_end_time || event.callEndTime
+    transcript: callData.transcript || event.transcript || '',
+    summary: callData.call_analysis?.call_summary || callData.summary || event.summary || '',
+    eventType: event.event_type || event.eventType || event.event || 'call_analyze',
+    metadata: callData.metadata || event.metadata || {},
+    callStartTime: callData.start_timestamp || callData.call_start_time || callData.callStartTime,
+    callEndTime: callData.end_timestamp || callData.call_end_time || callData.callEndTime,
+    agentId: callData.agent_id || callData.agentId || event.agent_id
   };
 };
 
