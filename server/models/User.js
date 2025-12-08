@@ -111,6 +111,11 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: 'Not Active',
     },
+    retellAgentId: {
+      type: String,
+      default: null,
+      index: true, // Index for fast lookups by agent ID
+    },
   },
   analytics: {
     callsToday: {

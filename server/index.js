@@ -37,6 +37,7 @@ const subscriptionRoutes = require('./routes/subscription');
 const dashboardRoutes = require('./routes/dashboard');
 const n8nRoutes = require('./routes/n8n');
 const demoRoutes = require('./routes/demo');
+const retellRoutes = require('./routes/retellRoutes');
 
 // New routes for call analytics system
 const callRoutes = require('./routes/callRoutes');
@@ -178,6 +179,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/n8n', n8nRoutes);
 app.use('/api/demo', demoRoutes);
+app.use('/api/retell', retellRoutes);
 
 // Mount call analytics routes BEFORE general dashboard routes (order matters!)
 app.use('/api/calls', callRoutes);

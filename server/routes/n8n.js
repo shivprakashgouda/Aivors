@@ -372,18 +372,42 @@ router.post('/retell-webhook', async (req, res) => {
       );
     }
 
-    // Find user by userId or email
+    // Find user by retellAgentId from webhook payload
     let userId = callData.userId;
+    let user = null;
+    
+    // Try to find user by retellAgentId (agent_id from webhook)
+    const agentId = req.body.call?.agent_id || req.body.agent_id;
+    if (agentId) {
+      user = await User.findOne({ 'business.retellAgentId': agentId });
+      if (user) {
+        userId = user._id.toString();
+        console.log(`✅ [RETELL WEBHOOK] Found user by agent_id: ${agentId} -> ${user.email}`);
+      } else {
+        console.log(`⚠️  [RETELL WEBHOOK] No user found for agent_id: ${agentId}`);
+      }
+    }
+    
+    // Fallback: Find by userId in metadata or email
+    if (!userId && callData.userId) {
+      user = await User.findById(callData.userId);
+      if (user) {
+        userId = user._id.toString();
+      }
+    }
+    
     if (!userId && req.body.email) {
-      const user = await User.findOne({ email: req.body.email });
+      user = await User.findOne({ email: req.body.email });
       if (user) {
         userId = user._id.toString();
       }
     }
 
     if (!userId) {
-      console.log('⚠️  [RETELL WEBHOOK] No userId found, using default test user');
-      userId = 'test_user_' + Date.now();
+      console.log('⚠️  [RETELL WEBHOOK] No user found for this call, skipping...');
+      return res.status(400).json(
+        formatError('No client found for this agent. Please connect your Retell agent in the dashboard.', 400)
+      );
     }
 
     // Check for duplicate
