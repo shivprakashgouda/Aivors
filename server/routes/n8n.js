@@ -351,13 +351,15 @@ router.post('/retell-webhook', async (req, res) => {
 
     console.log('📞 [RETELL WEBHOOK] Received:', JSON.stringify(req.body, null, 2));
 
-    // Validate event type - only process call_analyze
-    const eventType = req.body.event_type || req.body.eventType;
-    if (eventType !== 'call_analyze') {
-      console.log(`⏭️  [RETELL WEBHOOK] Skipping event: ${eventType} (not call_analyze)`);
+    // Validate event type - only process call_analyze or call_analyzed
+    const eventType = req.body.event_type || req.body.eventType || req.body.event;
+    const validEvents = ['call_analyze', 'call_analyzed'];
+    
+    if (!validEvents.includes(eventType)) {
+      console.log(`⏭️  [RETELL WEBHOOK] Skipping event: ${eventType} (not call_analyze/call_analyzed)`);
       return res.json({
         success: true,
-        message: `Event type "${eventType}" ignored. Only processing "call_analyze" events.`,
+        message: `Event type "${eventType}" ignored. Only processing "call_analyze" or "call_analyzed" events.`,
         skipped: true,
         eventType
       });
