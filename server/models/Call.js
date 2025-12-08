@@ -8,13 +8,11 @@ const callSchema = new mongoose.Schema({
   callId: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   userId: {
     type: String,
     required: true,
-    index: true,
     ref: 'User'
   },
   // Call details
@@ -116,7 +114,7 @@ callSchema.statics.getUserCallStats = async function(userId) {
 };
 
 // Indexes for faster queries
-callSchema.index({ callId: 1 });
+// Note: callId already has unique: true which creates an index automatically
 callSchema.index({ userId: 1, createdAt: -1 });
 callSchema.index({ createdAt: -1 });
 callSchema.index({ status: 1 });
