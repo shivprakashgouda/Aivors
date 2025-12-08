@@ -29,7 +29,7 @@ export const Footer = ({ onBookDemoClick }: FooterProps) => {
           <div>
             <h3 className="font-bold mb-4">CONTACT</h3>
             <div className="space-y-2 text-muted-foreground">
-              <p>Phone: +1 (409)960-2907</p>
+              <p>Phone: +1 (832)713-8829</p>
               <p>Support: info@aivors.com</p>
               <p>Looking to invest: info@aivors.com</p>
             </div>
