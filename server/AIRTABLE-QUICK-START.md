@@ -14,7 +14,7 @@ npm start
 AIRTABLE_BASE=appjg75kO367PZuBV
 AIRTABLE_TABLE=Table 1
 AIRTABLE_VIEW=Grid view
-AIRTABLE_TOKEN=patE6BWA050QJhvVM.4035a443db5b087d8cae3139d0b8beb0390f2f5e8876d58928caca9bef724f1a
+AIRTABLE_TOKEN=your_personal_access_token_here
 ```
 
 ## 🔗 API Endpoints

@@ -62,10 +62,7 @@ Create or update `server/.env`:
 
 ```bash
 # Airtable Configuration (REQUIRED)
-AIRTABLE_TOKEN=patE6BWA050QJhvVM.f1d36e80d39a1cdfdf68f92c05e20d3ff5c49ed56e1b0f3e5c3ab9b1aecb35ef
-AIRTABLE_BASE=appjg75kO367PZuBV
-AIRTABLE_TABLE=Table 1
-AIRTABLE_VIEW=Grid view
+AIRTABLE_TOKEN=your_personal_access_token_here
 
 # MongoDB (Still needed for User & Subscription)
 MONGODB_URI=your_mongodb_connection_string
