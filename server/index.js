@@ -13,6 +13,7 @@ try {
 }
 
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
@@ -20,6 +21,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 const csrf = require('csurf');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_your_secret_key_here');
+const { initializeSocketIO } = require('./config/socketio');
 
 const connectDB = require('./config/db');
 const User = require('./models/User');
@@ -43,6 +45,9 @@ const retellRoutes = require('./routes/retellRoutes');
 const callRoutes = require('./routes/callRoutes');
 const subscriptionWebhookRoutes = require('./routes/subscriptionRoutes');
 const dashboardStatsRoutes = require('./routes/dashboardRoutes');
+
+// Airtable integration routes
+const airtableRoutes = require('./routes/airtable');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -149,6 +154,7 @@ app.use((req, res, next) => {
     || req.path.startsWith('/api/n8n') // n8n webhook endpoints
     || req.path.startsWith('/api/calls') // Call analytics endpoints
     || req.path.startsWith('/api/subscription') // Subscription endpoints
+    || req.path.startsWith('/api/airtable') // Airtable endpoints and webhooks
     || req.path === '/api/create-checkout-session'
     || req.path === '/api/activate-subscription'
     || req.path === '/api/cancel-subscription'
@@ -188,6 +194,10 @@ app.use('/api/dashboard', dashboardStatsRoutes);
 
 // Mount general dashboard routes LAST (has catch-all /:userId route)
 app.use('/api/dashboard', dashboardRoutes);
+
+// Mount Airtable routes
+app.use('/api/airtable', airtableRoutes);
+app.use('/api/webhook/airtable', airtableRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -751,13 +761,36 @@ app.post('/api/create-portal-session', authGuard, async (req, res, next) => {
   }
 });
 
-// Start server
 // Not found and error handlers
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// Create HTTP server for both Express and Socket.io
+const server = http.createServer(app);
+
+// Initialize Socket.io with same CORS configuration as Express
+const socketCorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (isDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      return callback(null, true);
+    }
+    if (allowed.includes(origin)) return callback(null, true);
+    return callback(new Error(`Socket.io CORS not allowed for origin: ${origin}`));
+  },
+  credentials: true,
+};
+
+const io = initializeSocketIO(server, socketCorsOptions);
+
+// Attach Socket.io instance to Express app so routes can access it
+// This allows the webhook route to emit events to connected clients
+app.set('io', io);
+
+// Start server
+server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🔌 Socket.io server ready for WebSocket connections`);
   console.log(`🌐 CORS allowed origins: ${allowed.join(', ')}`);
   console.log(`📝 API Endpoints:`);
   console.log(`\n   Auth:`);
@@ -784,6 +817,9 @@ app.listen(PORT, () => {
   console.log(`\n   Dashboard:`);
   console.log(`   - GET  http://localhost:${PORT}/api/dashboard`);
   console.log(`   - GET  http://localhost:${PORT}/api/dashboard/:userId`);
+  console.log(`\n   Airtable:`);
+  console.log(`   - GET  http://localhost:${PORT}/api/airtable/:userId`);
+  console.log(`   - POST http://localhost:${PORT}/api/webhook/airtable`);
   console.log('');
   console.log('⚠️  Environment variables:');
   console.log('   - MONGO_URI:', process.env.MONGO_URI ? '✅ Set' : '❌ Missing');
@@ -791,4 +827,7 @@ app.listen(PORT, () => {
   console.log('   - STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? '✅ Set' : '❌ Missing');
   console.log('   - STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? '✅ Set' : '❌ Missing');
   console.log('   - CLIENT_URL:', process.env.CLIENT_URL || 'http://localhost:8080 (default)');
+  console.log('   - AIRTABLE_BASE:', process.env.AIRTABLE_BASE ? '✅ Set' : '❌ Missing');
+  console.log('   - AIRTABLE_TABLE:', process.env.AIRTABLE_TABLE ? '✅ Set' : '❌ Missing');
+  console.log('   - AIRTABLE_TOKEN:', process.env.AIRTABLE_TOKEN ? '✅ Set' : '❌ Missing');
 });

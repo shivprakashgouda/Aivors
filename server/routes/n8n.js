@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const UsageLog = require('../models/UsageLog');
+const { getRecordsByUserId } = require('../services/airtableService');
 
 const router = express.Router();
 
@@ -340,7 +341,7 @@ router.post('/analytics/update', verifyN8NSecret, async (req, res) => {
  */
 router.post('/retell-webhook', async (req, res) => {
   try {
-    const { Call, Subscription, User } = require('../models');
+    const { Subscription, User } = require('../models'); // Call model removed - using Airtable
     const { 
       extractCallData, 
       formatResponse, 
@@ -413,35 +414,30 @@ router.post('/retell-webhook', async (req, res) => {
       );
     }
 
-    // Check for duplicate
-    const exists = await Call.callExists(callData.callId);
-    if (exists) {
-      console.log(`🔄 [RETELL WEBHOOK] Duplicate call ${callData.callId} - already processed`);
-      return res.json({
-        success: true,
-        message: 'Call already processed',
-        duplicate: true,
-        callId: callData.callId
-      });
+    // Check for duplicate in Airtable
+    try {
+      const existingRecords = await getRecordsByUserId(userId, { maxRecords: 1000 });
+      const duplicate = existingRecords.records.find(r => 
+        r.fields.call_id === callData.callId || r.fields.callId === callData.callId
+      );
+      
+      if (duplicate) {
+        console.log(`🔄 [RETELL WEBHOOK] Duplicate call ${callData.callId} - already in Airtable`);
+        return res.json({
+          success: true,
+          message: 'Call already processed in Airtable',
+          duplicate: true,
+          callId: callData.callId,
+          recordId: duplicate.id
+        });
+      }
+    } catch (err) {
+      console.log('⚠️  Could not check duplicates in Airtable:', err.message);
     }
 
-    // Save call to database
-    const call = await Call.create({
-      callId: callData.callId,
-      userId: userId,
-      phoneNumber: callData.phoneNumber,
-      durationSeconds: callData.durationSeconds,
-      durationMinutes: callData.durationMinutes,
-      transcript: callData.transcript,
-      summary: callData.summary,
-      eventType: callData.eventType,
-      metadata: callData.metadata,
-      callStartTime: callData.callStartTime,
-      callEndTime: callData.callEndTime,
-      status: 'completed'
-    });
-
-    console.log(`✅ [RETELL WEBHOOK] Call saved: ${call.callId} (${call.durationMinutes} min)`);
+    // NOTE: Call data will be saved to Airtable by n8n workflow
+    // This endpoint only handles subscription logic
+    console.log(`📝 [RETELL WEBHOOK] Processing call ${callData.callId} (${callData.durationMinutes} min) - data will be stored in Airtable by n8n`);
 
     // Get or create subscription
     const subscription = await getOrCreateSubscription(Subscription, userId);
@@ -483,17 +479,18 @@ router.post('/retell-webhook', async (req, res) => {
       console.log('⚠️  Could not update user analytics:', err.message);
     }
 
-    // Prepare response
+    // Prepare response (call data from request, not database)
     const responseData = {
       call: {
-        callId: call.callId,
-        userId: call.userId,
-        phoneNumber: call.phoneNumber,
-        durationMinutes: call.durationMinutes,
-        durationSeconds: call.durationSeconds,
-        transcriptLength: call.transcript.length,
-        summaryLength: call.summary.length,
-        createdAt: call.createdAt
+        callId: callData.callId,
+        userId: userId,
+        phoneNumber: callData.phoneNumber,
+        durationMinutes: callData.durationMinutes,
+        durationSeconds: callData.durationSeconds,
+        transcriptLength: callData.transcript?.length || 0,
+        summaryLength: callData.summary?.length || 0,
+        dataSource: 'airtable',
+        note: 'Call data stored in Airtable by n8n workflow'
       },
       subscription: {
         availableCredits: subscription.availableCredits,

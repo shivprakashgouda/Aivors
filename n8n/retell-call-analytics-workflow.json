@@ -1,0 +1,220 @@
+{
+  "name": "Aivors - Retell AI Call Analytics",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-webhook",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-node-retell",
+      "name": "Retell Webhook Receiver",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "aivors-retell-webhook",
+      "notes": "Receives Retell AI call events. Configure this URL in Retell dashboard: https://n8n.srv971061.hstgr.cloud/webhook/retell-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log incoming webhook for debugging\nconst webhookData = items[0].json;\nconsole.log('📞 Retell Webhook Received:', JSON.stringify(webhookData, null, 2));\n\n// Extract event type\nconst eventType = webhookData.event || webhookData.event_type || webhookData.eventType;\n\n// Only process call_analyzed events\nif (eventType !== 'call_analyzed' && eventType !== 'call_analyze') {\n  console.log(`⏭️  Skipping event type: ${eventType}`);\n  return [{\n    json: {\n      skip: true,\n      message: `Event type \"${eventType}\" ignored. Only processing call_analyzed events.`,\n      eventType: eventType\n    }\n  }];\n}\n\nconsole.log('✅ Processing call_analyzed event');\n\n// Return the full webhook data to pass to backend\nreturn [{\n  json: webhookData\n}];"
+      },
+      "id": "function-node-retell-parse",
+      "name": "Parse Retell Event",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "Validates event type and logs incoming data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.skip }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-node-retell",
+      "name": "Skip Non-Call Events",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "notes": "Filters out non-call_analyzed events"
+    },
+    {
+      "parameters": {
+        "url": "https://aivors-5hvj.onrender.com/api/n8n/retell-webhook",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-n8n-webhook-secret",
+              "value": "aivors-secret"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "http-node-backend",
+      "name": "Forward to Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200],
+      "notes": "Forwards call data to Aivors backend for processing and storage"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log backend response\nconst response = items[0].json;\nconsole.log('📊 Backend Response:', JSON.stringify(response, null, 2));\n\n// Extract key information\nconst success = response.success || false;\nconst message = response.message || 'No message';\nconst callData = response.data?.call;\nconst subscription = response.data?.subscription;\n\nif (success && callData) {\n  console.log(`✅ Call saved: ${callData.callId} (${callData.durationMinutes} min)`);\n  if (subscription) {\n    console.log(`💳 Credits: ${subscription.availableCredits}/${subscription.totalCredits}`);\n    if (subscription.shouldDisableWorkflow) {\n      console.log('⚠️  WARNING: Credits depleted! Workflow should be disabled.');\n    }\n  }\n} else {\n  console.log(`❌ Backend error: ${message}`);\n}\n\nreturn items;"
+      },
+      "id": "function-node-log-response",
+      "name": "Log Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "notes": "Logs backend response for monitoring"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Handle workflow disable check\nconst response = items[0].json;\nconst subscription = response.data?.subscription;\n\nif (subscription?.shouldDisableWorkflow === true) {\n  console.log('🚨 CREDITS DEPLETED - Workflow should be disabled');\n  console.log(`User: ${response.data?.call?.userId}`);\n  console.log(`Available Credits: ${subscription.availableCredits}`);\n  \n  return [{\n    json: {\n      shouldDisable: true,\n      userId: response.data?.call?.userId,\n      availableCredits: subscription.availableCredits,\n      message: 'Credits depleted. Please upgrade subscription.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    shouldDisable: false,\n    message: 'Workflow active'\n  }\n}];"
+      },
+      "id": "function-node-credit-check",
+      "name": "Check Credits",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "notes": "Checks if credits are depleted and workflow should be disabled"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-node",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 200],
+      "notes": "Returns response to Retell"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-node-skip",
+      "name": "Send Skip Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "notes": "Returns skip response for non-call_analyzed events"
+    }
+  ],
+  "connections": {
+    "Retell Webhook Receiver": {
+      "main": [
+        [
+          {
+            "node": "Parse Retell Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Retell Event": {
+      "main": [
+        [
+          {
+            "node": "Skip Non-Call Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Non-Call Events": {
+      "main": [
+        [
+          {
+            "node": "Forward to Backend",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Skip Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forward to Backend": {
+      "main": [
+        [
+          {
+            "node": "Log Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Response": {
+      "main": [
+        [
+          {
+            "node": "Check Credits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Credits": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 300
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aivors-production"
+  },
+  "tags": []
+}

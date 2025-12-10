@@ -1,3 +1,37 @@
+// ============================================
+// AIRTABLE APIs
+// ============================================
+
+/**
+ * Get Airtable records for a user by email
+ */
+export const getAirtableRecordsByEmail = async (email: string) => {
+  const response = await apiClient.get(`/api/airtable/by-email/${encodeURIComponent(email)}`);
+  return response.data;
+};
+
+/**
+ * Get all Airtable records for a user by email (with pagination support)
+ */
+export const getAllAirtableRecordsByEmail = async (email: string) => {
+  const response = await apiClient.get(`/api/airtable/by-email/${encodeURIComponent(email)}?all=true`);
+  return response.data;
+};
+
+// Airtable record type for dashboard
+export interface AirtableCallRecord {
+  id: string;
+  Name: string;
+  EMAIL: string;
+  PHONE: string;
+  "A PRODUCT": string;
+  "# QUANTITY": string | number;
+  "A CALLTYPE": string;
+  "A TOTAL_Time": string | number;
+  Summery: string;
+  call_analyzed: string;
+  [key: string]: any;
+}
 /**
  * Call Analytics API Service
  * Handles API calls for call analytics and subscription management

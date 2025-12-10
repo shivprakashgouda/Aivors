@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airtable Real-time Demo</title>
+    
+    <!-- Socket.io Client Library (CDN) -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f7f9fc;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 24px;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 15px 30px;
+            background: #fff;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #10b981;
+        }
+
+        .status-indicator.disconnected {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        table thead {
+            background: #f7f9fc;
+            position: sticky;
+            top: 0;
+        }
+
+        table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        table tbody tr:hover {
+            background: #f7f9fc;
+        }
+
+        .record-new {
+            animation: highlight 2s ease-in-out;
+        }
+
+        @keyframes highlight {
+            0% { background: #fef3c7; }
+            100% { background: transparent; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .logs {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1f2937;
+            border-radius: 8px;
+            color: #10b981;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid #374151;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-timestamp {
+            color: #6b7280;
+            margin-right: 10px;
+        }
+
+        .log-info { color: #3b82f6; }
+        .log-success { color: #10b981; }
+        .log-warning { color: #f59e0b; }
+        .log-error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔄 Airtable Real-time Demo</h1>
+            <p>Connect to your Airtable data and receive live updates via Socket.io</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="input-group">
+                <label for="userId">User ID</label>
+                <input 
+                    type="text" 
+                    id="userId" 
+                    placeholder="Enter your user ID (e.g., user123)" 
+                    value="user123"
+                >
+            </div>
+            <div class="input-group">
+                <label for="apiUrl">API URL</label>
+                <input 
+                    type="text" 
+                    id="apiUrl" 
+                    placeholder="http://localhost:3001" 
+                    value="http://localhost:3001"
+                >
+            </div>
+            <button id="loadBtn" onclick="loadData()">Load Data</button>
+            <button id="connectBtn" onclick="connectWebSocket()">Connect WebSocket</button>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status">
+            <div class="status-item">
+                <span class="status-indicator" id="wsStatus"></span>
+                <span id="wsStatusText">WebSocket: Disconnected</span>
+            </div>
+            <div class="status-item">
+                <span>📊 Records: <strong id="recordCount">0</strong></span>
+            </div>
+            <div class="status-item">
+                <span>🔔 Updates received: <strong id="updateCount">0</strong></span>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h2>Airtable Records</h2>
+            
+            <div class="table-container" id="tableContainer">
+                <div class="empty-state">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p>No data loaded yet. Enter your User ID and click "Load Data"</p>
+                </div>
+            </div>
+
+            <!-- Activity Logs -->
+            <h2 style="margin-top: 30px;">Activity Log</h2>
+            <div class="logs" id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let socket = null;
+        let currentUserId = null;
+        let updateCounter = 0;
+
+        /**
+         * Add log entry to activity log
+         */
+        function addLog(message, type = 'info') {
+            const logsContainer = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
+            logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+            
+            // Keep only last 50 logs
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.lastChild);
+            }
+        }
+
+        /**
+         * Update WebSocket status indicator
+         */
+        function updateWSStatus(connected) {
+            const indicator = document.getElementById('wsStatus');
+            const text = document.getElementById('wsStatusText');
+            
+            if (connected) {
+                indicator.className = 'status-indicator connected';
+                text.textContent = 'WebSocket: Connected';
+            } else {
+                indicator.className = 'status-indicator disconnected';
+                text.textContent = 'WebSocket: Disconnected';
+            }
+        }
+
+        /**
+         * Connect to Socket.io server
+         */
+        function connectWebSocket() {
+            const userId = document.getElementById('userId').value.trim();
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+
+            if (!userId) {
+                alert('Please enter a User ID');
+                return;
+            }
+
+            if (!apiUrl) {
+                alert('Please enter an API URL');
+                return;
+            }
+
+            // Disconnect existing socket if any
+            if (socket) {
+                socket.disconnect();
+                addLog('Disconnecting existing WebSocket connection...', 'warning');
+            }
+
+            addLog(`Connecting to WebSocket server at ${apiUrl}...`, 'info');
+
+            try {
+                // Initialize Socket.io connection
+                socket = io(apiUrl, {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionAttempts: 5,
+                    reconnectionDelay: 1000,
+                });
+
+                // Connection established
+                socket.on('connect', () => {
+                    addLog(`✅ WebSocket connected! Socket ID: ${socket.id}`, 'success');
+                    updateWSStatus(true);
+
+                    // Join user's room
+                    addLog(`📡 Joining room for user: ${userId}`, 'info');
+                    socket.emit('join', { userId: userId });
+                    currentUserId = userId;
+                });
+
+                // Successfully joined room
+                socket.on('joined', (data) => {
+                    addLog(`✅ Joined room: ${data.roomName}`, 'success');
+                });
+
+                // Receive Airtable updates
+                socket.on('airtable_update', (data) => {
+                    updateCounter++;
+                    document.getElementById('updateCount').textContent = updateCounter;
+                    
+                    addLog(`🔔 Airtable update received for record: ${data.recordId}`, 'success');
+                    console.log('Airtable Update:', data);
+
+                    // Reload data to show latest changes
+                    addLog('🔄 Reloading data to reflect changes...', 'info');
+                    loadData(false); // Silent reload
+                });
+
+                // Disconnect event
+                socket.on('disconnect', (reason) => {
+                    addLog(`❌ WebSocket disconnected: ${reason}`, 'error');
+                    updateWSStatus(false);
+                });
+
+                // Reconnection attempt
+                socket.on('reconnect_attempt', (attemptNumber) => {
+                    addLog(`🔄 Reconnection attempt ${attemptNumber}...`, 'warning');
+                });
+
+                // Reconnection success
+                socket.on('reconnect', (attemptNumber) => {
+                    addLog(`✅ Reconnected after ${attemptNumber} attempts`, 'success');
+                    updateWSStatus(true);
+                    
+                    // Rejoin room after reconnection
+                    if (currentUserId) {
+                        socket.emit('join', { userId: currentUserId });
+                    }
+                });
+
+                // Connection error
+                socket.on('connect_error', (error) => {
+                    addLog(`❌ Connection error: ${error.message}`, 'error');
+                    updateWSStatus(false);
+                });
+
+                // Socket error
+                socket.on('error', (error) => {
+                    addLog(`❌ Socket error: ${error.message}`, 'error');
+                });
+
+            } catch (error) {
+                addLog(`❌ Failed to initialize WebSocket: ${error.message}`, 'error');
+                console.error('WebSocket Error:', error);
+            }
+        }
+
+        /**
+         * Load Airtable data from API
+         */
+        async function loadData(showLog = true) {
+            const userId = document.getElementById('userId').value.trim();
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+
+            if (!userId) {
+                alert('Please enter a User ID');
+                return;
+            }
+
+            if (!apiUrl) {
+                alert('Please enter an API URL');
+                return;
+            }
+
+            if (showLog) {
+                addLog(`📊 Loading Airtable records for user: ${userId}...`, 'info');
+            }
+
+            const loadBtn = document.getElementById('loadBtn');
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Loading...';
+
+            try {
+                // Fetch data from API
+                // Using ?all=true to get all records automatically
+                const response = await fetch(`${apiUrl}/api/airtable/${userId}?all=true`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to fetch data');
+                }
+
+                const records = result.data.records;
+                
+                if (showLog) {
+                    addLog(`✅ Loaded ${records.length} records`, 'success');
+                }
+
+                // Update record count
+                document.getElementById('recordCount').textContent = records.length;
+
+                // Render table
+                renderTable(records);
+
+            } catch (error) {
+                addLog(`❌ Error loading data: ${error.message}`, 'error');
+                console.error('Load Error:', error);
+                alert(`Failed to load data: ${error.message}`);
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Load Data';
+            }
+        }
+
+        /**
+         * Render Airtable records in table
+         */
+        function renderTable(records) {
+            const container = document.getElementById('tableContainer');
+
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>No records found for this user</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get all unique field names from records
+            const fieldNames = new Set();
+            records.forEach(record => {
+                Object.keys(record.fields).forEach(field => fieldNames.add(field));
+            });
+
+            const fields = Array.from(fieldNames);
+
+            // Build table HTML
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Record ID</th>
+                            ${fields.map(field => `<th>${field}</th>`).join('')}
+                            <th>Created Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${records.map(record => `
+                            <tr class="record-new">
+                                <td><code>${record.id}</code></td>
+                                ${fields.map(field => {
+                                    const value = record.fields[field];
+                                    // Format value based on type
+                                    const displayValue = Array.isArray(value) 
+                                        ? value.join(', ')
+                                        : value || '—';
+                                    return `<td>${displayValue}</td>`;
+                                }).join('')}
+                                <td>${new Date(record.createdTime).toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Initialize on page load
+        addLog('🚀 Application loaded. Enter User ID and connect to get started.', 'info');
+    </script>
+</body>
+</html>

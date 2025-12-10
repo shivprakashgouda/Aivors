@@ -1,19 +1,22 @@
 /**
  * Dashboard Controller
  * Provides analytics and statistics for the dashboard
+ * NOW FETCHES DATA FROM AIRTABLE
  */
 
-const { Call, Subscription, User } = require('../models');
+const { Subscription, User } = require('../models');
 const {
   formatResponse,
   formatError,
   getSubscriptionFlags
 } = require('../utils/helpers');
+const { getAllRecordsByUserId } = require('../services/airtableService');
 
 /**
  * GET /api/dashboard/stats
  * Get comprehensive dashboard statistics for a user
  * Query params: userId (required)
+ * NOW USES AIRTABLE DATA INSTEAD OF OLD CALL MODEL
  */
 const getDashboardStats = async (req, res) => {
   try {
@@ -25,15 +28,82 @@ const getDashboardStats = async (req, res) => {
       );
     }
     
-    // Get call statistics
-    const callStats = await Call.getUserCallStats(userId);
+    console.log(`📊 Fetching dashboard stats from Airtable for user: ${userId}`);
+    
+    // Fetch all records from Airtable for this user
+    const airtableRecords = await getAllRecordsByUserId(userId);
+    
+    console.log(`✅ Retrieved ${airtableRecords.length} records from Airtable`);
+    
+    // Process Airtable records into call statistics
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const yesterdayStart = new Date(todayStart);
+    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+    
+    let totalMinutes = 0;
+    let totalSeconds = 0;
+    let callsToday = 0;
+    let callsYesterday = 0;
+    const processedCalls = [];
+    
+    // Process each Airtable record
+    airtableRecords.forEach(record => {
+      const fields = record.fields;
+      const createdTime = new Date(record.createdTime);
+      
+      // Extract duration (try multiple field names)
+      const durationMinutes = parseFloat(fields.duration_minutes || fields.durationMinutes || fields.duration || 0);
+      const durationSeconds = parseFloat(fields.duration_seconds || fields.durationSeconds || durationMinutes * 60 || 0);
+      
+      totalMinutes += durationMinutes;
+      totalSeconds += durationSeconds;
+      
+      // Count today's calls
+      if (createdTime >= todayStart) {
+        callsToday++;
+      }
+      
+      // Count yesterday's calls
+      if (createdTime >= yesterdayStart && createdTime < todayStart) {
+        callsYesterday++;
+      }
+      
+      // Prepare call data for display
+      processedCalls.push({
+        callId: record.id,
+        phoneNumber: fields.phone_number || fields.phoneNumber || fields.phone || 'N/A',
+        durationMinutes: durationMinutes,
+        transcript: fields.transcript || '',
+        transcriptPreview: (fields.transcript || '').substring(0, 150),
+        summary: fields.summary || fields.notes || '',
+        summaryPreview: (fields.summary || fields.notes || '').substring(0, 200),
+        createdAt: record.createdTime,
+        status: fields.status || fields.call_status || 'completed',
+        // Include all fields for display
+        allFields: fields
+      });
+    });
+    
+    // Sort calls by date (newest first)
+    processedCalls.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
     // Get last 10 calls
-    const lastCalls = await Call.find({ userId })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select('callId phoneNumber durationMinutes transcript summary createdAt status')
-      .lean();
+    const lastCalls = processedCalls.slice(0, 10);
+    
+    // Calculate percentage change
+    let callsChangePercent = 0;
+    if (callsYesterday > 0) {
+      callsChangePercent = ((callsToday - callsYesterday) / callsYesterday) * 100;
+    } else if (callsToday > 0) {
+      callsChangePercent = 100;
+    }
+    
+    // Calculate average duration
+    const averageDuration = airtableRecords.length > 0 
+      ? totalMinutes / airtableRecords.length 
+      : 0;
     
     // Get subscription details
     let subscription = await Subscription.findOne({ userId });
@@ -54,35 +124,6 @@ const getDashboardStats = async (req, res) => {
     // Get user info (if exists)
     const user = await User.findOne({ userId }).select('name email status').lean();
     
-    // Calculate today's calls
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    
-    const callsToday = await Call.countDocuments({
-      userId,
-      createdAt: { $gte: todayStart }
-    });
-    
-    // Calculate yesterday's calls for percentage change
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-    
-    const callsYesterday = await Call.countDocuments({
-      userId,
-      createdAt: { 
-        $gte: yesterdayStart,
-        $lt: todayStart
-      }
-    });
-    
-    // Calculate percentage change
-    let callsChangePercent = 0;
-    if (callsYesterday > 0) {
-      callsChangePercent = ((callsToday - callsYesterday) / callsYesterday) * 100;
-    } else if (callsToday > 0) {
-      callsChangePercent = 100;
-    }
-    
     // Prepare dashboard data
     const dashboardData = {
       user: user ? {
@@ -93,13 +134,13 @@ const getDashboardStats = async (req, res) => {
       } : null,
       
       callAnalytics: {
-        totalCalls: callStats.totalCalls,
+        totalCalls: airtableRecords.length,
         callsToday,
         callsYesterday,
         callsChangePercent: Math.round(callsChangePercent * 100) / 100,
-        totalMinutesUsed: callStats.totalMinutes,
-        totalSecondsUsed: callStats.totalSeconds,
-        averageDuration: Math.round(callStats.avgDuration * 100) / 100
+        totalMinutesUsed: Math.round(totalMinutes * 100) / 100,
+        totalSecondsUsed: Math.round(totalSeconds),
+        averageDuration: Math.round(averageDuration * 100) / 100
       },
       
       subscription: {
@@ -117,11 +158,14 @@ const getDashboardStats = async (req, res) => {
         callId: call.callId,
         phoneNumber: call.phoneNumber,
         durationMinutes: call.durationMinutes,
-        transcriptPreview: call.transcript.substring(0, 100),
-        summaryPreview: call.summary.substring(0, 150),
+        transcriptPreview: call.transcriptPreview,
+        summaryPreview: call.summaryPreview,
+        transcript: call.transcript,
+        summary: call.summary,
         createdAt: call.createdAt,
         status: call.status,
-        timeAgo: getTimeAgo(call.createdAt)
+        timeAgo: getTimeAgo(call.createdAt),
+        airtableFields: call.allFields
       })),
       
       alerts: {
@@ -132,11 +176,17 @@ const getDashboardStats = async (req, res) => {
           : subscriptionFlags.lowBalance
           ? `Low balance: Only ${subscriptionFlags.creditsRemaining} minutes remaining`
           : null
-      }
+      },
+      
+      // Data source indicator
+      dataSource: 'airtable',
+      airtableRecordCount: airtableRecords.length
     };
     
+    console.log(`✅ Dashboard stats prepared from Airtable: ${airtableRecords.length} total records, ${callsToday} today`);
+    
     return res.status(200).json(
-      formatResponse(true, 'Dashboard statistics retrieved successfully', dashboardData)
+      formatResponse(true, 'Dashboard statistics retrieved successfully from Airtable', dashboardData)
     );
     
   } catch (error) {
@@ -150,40 +200,52 @@ const getDashboardStats = async (req, res) => {
 /**
  * GET /api/dashboard/recent-activity/:userId
  * Get recent activity feed for a user
+ * NOW USES AIRTABLE DATA
  */
 const getRecentActivity = async (req, res) => {
   try {
     const { userId } = req.params;
     const limit = parseInt(req.query.limit) || 20;
     
-    // Get recent calls
-    const recentCalls = await Call.find({ userId })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .select('callId phoneNumber durationMinutes createdAt')
-      .lean();
+    console.log(`📋 Fetching recent activity from Airtable for user: ${userId}`);
+    
+    // Get records from Airtable
+    const airtableRecords = await getAllRecordsByUserId(userId);
+    
+    // Sort by date (newest first) and limit
+    const sortedRecords = airtableRecords
+      .sort((a, b) => new Date(b.createdTime).getTime() - new Date(a.createdTime).getTime())
+      .slice(0, limit);
     
     // Format as activity feed
-    const activities = recentCalls.map(call => ({
-      type: 'call_completed',
-      text: `Call with ${call.phoneNumber} completed (${call.durationMinutes} min)`,
-      timeAgo: getTimeAgo(call.createdAt),
-      timestamp: call.createdAt,
-      metadata: {
-        callId: call.callId,
-        phoneNumber: call.phoneNumber,
-        durationMinutes: call.durationMinutes
-      }
-    }));
+    const activities = sortedRecords.map(record => {
+      const fields = record.fields;
+      const phoneNumber = fields.phone_number || fields.phoneNumber || fields.phone || 'Unknown';
+      const durationMinutes = parseFloat(fields.duration_minutes || fields.durationMinutes || fields.duration || 0);
+      
+      return {
+        type: 'call_completed',
+        text: `Call with ${phoneNumber} completed (${durationMinutes.toFixed(1)} min)`,
+        timeAgo: getTimeAgo(record.createdTime),
+        timestamp: record.createdTime,
+        metadata: {
+          callId: record.id,
+          phoneNumber: phoneNumber,
+          durationMinutes: durationMinutes
+        }
+      };
+    });
+    
+    console.log(`✅ Retrieved ${activities.length} activities from Airtable`);
     
     return res.status(200).json(
-      formatResponse(true, 'Recent activity retrieved successfully', { activities })
+      formatResponse(true, 'Recent activity retrieved successfully from Airtable', { activities })
     );
     
   } catch (error) {
-    console.error('Error in getRecentActivity:', error);
+    console.error('❌ Error in getRecentActivity:', error);
     return res.status(500).json(
-      formatError('Failed to retrieve recent activity', 500, error.message)
+      formatError('Failed to retrieve recent activity from Airtable', 500, error.message)
     );
   }
 };
@@ -191,11 +253,14 @@ const getRecentActivity = async (req, res) => {
 /**
  * GET /api/dashboard/analytics/:userId
  * Get detailed analytics for charts and graphs
+ * NOW USES AIRTABLE DATA
  */
 const getAnalytics = async (req, res) => {
   try {
     const { userId } = req.params;
     const { period } = req.query; // 'week', 'month', 'year'
+    
+    console.log(`📈 Fetching analytics from Airtable for user: ${userId}, period: ${period}`);
     
     // Determine date range
     const now = new Date();
@@ -215,45 +280,59 @@ const getAnalytics = async (req, res) => {
         startDate.setDate(now.getDate() - 30); // Default 30 days
     }
     
-    // Get calls in period
-    const calls = await Call.find({
-      userId,
-      createdAt: { $gte: startDate }
-    }).select('durationMinutes createdAt').lean();
+    // Get all records from Airtable
+    const airtableRecords = await getAllRecordsByUserId(userId);
+    
+    // Filter by date range
+    const recordsInPeriod = airtableRecords.filter(record => {
+      const recordDate = new Date(record.createdTime);
+      return recordDate >= startDate && recordDate <= now;
+    });
     
     // Group by day
     const callsByDay = {};
-    calls.forEach(call => {
-      const day = call.createdAt.toISOString().split('T')[0];
+    recordsInPeriod.forEach(record => {
+      const fields = record.fields;
+      const day = new Date(record.createdTime).toISOString().split('T')[0];
+      const durationMinutes = parseFloat(fields.duration_minutes || fields.durationMinutes || fields.duration || 0);
+      
       if (!callsByDay[day]) {
         callsByDay[day] = { count: 0, minutes: 0 };
       }
       callsByDay[day].count += 1;
-      callsByDay[day].minutes += call.durationMinutes;
+      callsByDay[day].minutes += durationMinutes;
     });
     
     // Format for charts
     const chartData = Object.keys(callsByDay).sort().map(day => ({
       date: day,
       calls: callsByDay[day].count,
-      minutes: callsByDay[day].minutes
+      minutes: Math.round(callsByDay[day].minutes * 100) / 100
     }));
     
+    const totalMinutes = recordsInPeriod.reduce((sum, record) => {
+      const fields = record.fields;
+      return sum + parseFloat(fields.duration_minutes || fields.durationMinutes || fields.duration || 0);
+    }, 0);
+    
+    console.log(`✅ Analytics retrieved: ${recordsInPeriod.length} records in period`);
+    
     return res.status(200).json(
-      formatResponse(true, 'Analytics retrieved successfully', {
+      formatResponse(true, 'Analytics retrieved successfully from Airtable', {
         period,
         startDate,
         endDate: now,
-        totalCalls: calls.length,
-        totalMinutes: calls.reduce((sum, call) => sum + call.durationMinutes, 0),
-        chartData
+        totalCalls: recordsInPeriod.length,
+        totalMinutes: Math.round(totalMinutes * 100) / 100,
+        chartData,
+        dataSource: 'airtable'
       })
     );
     
   } catch (error) {
-    console.error('Error in getAnalytics:', error);
+    console.error('❌ Error in getAnalytics:', error);
     return res.status(500).json(
-      formatError('Failed to retrieve analytics', 500, error.message)
+      formatError('Failed to retrieve analytics from Airtable', 500, error.message)
     );
   }
 };
