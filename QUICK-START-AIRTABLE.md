@@ -4,7 +4,7 @@
 
 ### 1️⃣ Set Environment Variables
 ```bash
-AIRTABLE_TOKEN=patE6BWA050QJhvVM.f1d36e80d39a1cdfdf68f92c05e20d3ff5c49ed56e1b0f3e5c3ab9b1aecb35ef
+AIRTABLE_TOKEN=your_personal_access_token_here
 AIRTABLE_BASE=appjg75kO367PZuBV
 AIRTABLE_TABLE=Table 1
 AIRTABLE_VIEW=Grid view
