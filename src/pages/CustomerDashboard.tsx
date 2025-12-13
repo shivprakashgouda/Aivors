@@ -255,79 +255,53 @@ const CustomerDashboard = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row justify-between gap-4">
-                <div className="p-5 rounded-xl border border-dashed border-blue-500/40 bg-gradient-to-r from-blue-500/10 to-transparent flex-1">
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    📊 Call Analytics Dashboard
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    View detailed call transcripts, analytics, and credit usage
-                  </p>
+              {/* Call Analytics - Full Width */}
+              <div className="p-6 rounded-xl border border-dashed border-blue-500/40 bg-gradient-to-r from-blue-500/10 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                      📊 Call Analytics Dashboard
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      View AI-powered call insights, detailed transcripts, and conversation analytics
+                    </p>
+                  </div>
                   <Button 
                     onClick={() => navigate('/call-analytics')}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    size="lg"
+                    className="bg-blue-600 text-white hover:bg-blue-700 px-8"
                   >
                     View Call Analytics
                   </Button>
                 </div>
 
-                <div className="p-5 rounded-xl border border-dashed border-primary/40 bg-gradient-to-r from-primary/10 to-transparent flex-1">
-                  <h3 className="text-lg font-semibold mb-2">
-                    Configure Your Second Business
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Add another business to your AI phone manager
-                  </p>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    Get Started
-                  </Button>
-                </div>
-
-                <div className="flex-1 p-5 rounded-xl border border-border bg-muted/30">
-                  <h3 className="text-lg font-semibold mb-3">Analytics</h3>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-2xl font-bold">{analytics.callsToday}</p>
-                      <p className="text-sm text-muted-foreground">Calls Today</p>
-                      <p className="text-xs text-green-500 font-medium">
-                        {analytics.callsChangePercent > 0 ? '+' : ''}{analytics.callsChangePercent}% vs yesterday
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-2xl font-bold ${analytics.aiStatus === 'Online' ? 'text-success' : 'text-muted-foreground'}`}>
-                        {analytics.aiStatus}
-                      </p>
-                      <p className="text-sm text-muted-foreground">AI Status</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{analytics.responseTime}s</p>
-                      <p className="text-sm text-muted-foreground">Response Time</p>
-                    </div>
+                {/* Quick Stats Preview */}
+                <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-blue-500/20">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{analytics.callsToday}</p>
+                    <p className="text-sm text-muted-foreground">Calls Today</p>
+                    <p className="text-xs text-green-500 font-medium mt-1">
+                      {analytics.callsChangePercent > 0 ? '+' : ''}{analytics.callsChangePercent}% vs yesterday
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-2xl font-bold ${analytics.aiStatus === 'Online' ? 'text-success' : 'text-muted-foreground'}`}>
+                      {analytics.aiStatus}
+                    </p>
+                    <p className="text-sm text-muted-foreground">AI Status</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{analytics.responseTime}s</p>
+                    <p className="text-sm text-muted-foreground">Response Time</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-6 p-5 rounded-xl border border-border bg-muted/30">
-                <h3 className="text-lg font-semibold mb-2">Recent AI Activity</h3>
-                {recentActivity && recentActivity.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentActivity.map((activity, index) => (
-                      <div key={index} className="pb-3 border-b border-border last:border-0 last:pb-0">
-                        <p className="text-sm">{activity.text}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{activity.timeAgo}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No recent activity</p>
-                )}
               </div>
             </CardContent>
           </Card>
           {/* ===================================================================== */}
 
           {/* Stats Grid */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card className="border-border bg-card/30 backdrop-blur-xl">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -355,29 +329,6 @@ const CustomerDashboard = () => {
               <CardContent>
                 <div className="text-3xl font-bold">{remaining}</div>
                 <p className="text-sm text-muted-foreground mt-1">of {total} total</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border bg-card/30 backdrop-blur-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Next Renewal
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold">
-                  {subscription?.nextBillingDate
-                    ? new Date(subscription.nextBillingDate).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "—"}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Auto-renewal enabled
-                </p>
               </CardContent>
             </Card>
 
