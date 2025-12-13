@@ -9,25 +9,25 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import * as callAnalyticsAPI from "@/services/callAnalyticsAPI";
-import type { AirtableCallRecord } from "@/services/callAnalyticsAPI";
+import type { MongoDBCallRecord } from "@/services/callAnalyticsAPI";
 
 const CallAnalyticsDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, logout } = useAuth();
-  const [airtableRecords, setAirtableRecords] = useState<AirtableCallRecord[]>([]);
+  const [calls, setCalls] = useState<MongoDBCallRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAirtableData = async () => {
+  const fetchCallData = async () => {
     if (!user?.email) return;
     setLoading(true);
     try {
-      const response = await callAnalyticsAPI.getAirtableRecordsByEmail(user.email);
-      // Backend returns: { success: true, data: { records: [...], offset: null, email: '...' } }
-      if (response.success && response.data && Array.isArray(response.data.records)) {
-        setAirtableRecords(response.data.records);
+      const response = await callAnalyticsAPI.getMongoDBCalls();
+      // Backend returns: { success: true, data: [...], count: N, email: '...' }
+      if (response.success && Array.isArray(response.data)) {
+        setCalls(response.data);
       } else {
-        setAirtableRecords([]);
+        setCalls([]);
       }
     } catch (error: any) {
       console.error('Failed to load call analytics:', error);
@@ -36,7 +36,7 @@ const CallAnalyticsDashboard = () => {
         description: error.response?.data?.error || "Failed to load call analytics",
         variant: "destructive",
       });
-      setAirtableRecords([]);
+      setCalls([]);
     } finally {
       setLoading(false);
     }
@@ -44,11 +44,11 @@ const CallAnalyticsDashboard = () => {
 
 
   useEffect(() => {
-    fetchAirtableData();
+    fetchCallData();
     // Auto-refresh every 30 seconds for real-time updates
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        fetchAirtableData();
+        fetchCallData();
       }
     }, 30000);
     return () => clearInterval(interval);
@@ -64,7 +64,7 @@ const CallAnalyticsDashboard = () => {
     );
   }
 
-  if (!airtableRecords.length) {
+  if (!calls.length) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation onSignInClick={() => { }} onSignUpClick={() => { }} onBookDemoClick={() => { }} />
@@ -83,10 +83,9 @@ const CallAnalyticsDashboard = () => {
     );
   }
 
-  // Calculate total time across all calls
-  const totalMinutes = airtableRecords.reduce((sum, record) => {
-    const timeStr = record.fields.total_time || '0';
-    const minutes = parseFloat(timeStr) || 0;
+  // Calculate total time across all calls (convert seconds to minutes)
+  const totalMinutes = calls.reduce((sum, call) => {
+    const minutes = (call.durationSeconds || 0) / 60;
     return sum + minutes;
   }, 0);
 
@@ -112,7 +111,7 @@ const CallAnalyticsDashboard = () => {
             </div>
             <div className="flex items-center gap-3">
               <Button 
-                onClick={fetchAirtableData} 
+                onClick={fetchCallData} 
                 variant="outline" 
                 size="sm"
                 disabled={loading}
@@ -136,7 +135,7 @@ const CallAnalyticsDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-5xl font-bold text-primary">{airtableRecords.length}</div>
+                <div className="text-5xl font-bold text-primary">{calls.length}</div>
                 <p className="text-sm text-muted-foreground mt-2">AI-processed conversations</p>
               </CardContent>
             </Card>
@@ -168,18 +167,19 @@ const CallAnalyticsDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {airtableRecords.map((record, index) => {
-                  const transcript = record.fields.call_analyzed || 'No transcript available';
-                  const totalTime = record.fields.total_time || '0';
-                  const callType = record.fields.CallType || 'Unknown';
-                  const phoneNumber = record.fields.PHONE || 'N/A';
+                {calls.map((call, index) => {
+                  const transcript = call.transcript || 'No transcript available';
+                  const summary = call.summary || 'No summary available';
+                  const durationMinutes = Math.floor((call.durationSeconds || 0) / 60);
+                  const phoneNumber = call.phoneNumber || 'N/A';
+                  const eventType = call.eventType || 'call';
                   
                   // Split transcript into lines (assuming it's formatted with line breaks)
                   const transcriptLines = transcript.split('\n').filter(line => line.trim());
                   
                   return (
                     <Card 
-                      key={record.id} 
+                      key={call._id} 
                       className="border-l-4 border-l-primary bg-muted/30 hover:bg-muted/50 transition-all"
                     >
                       <CardContent className="p-6">
@@ -188,13 +188,13 @@ const CallAnalyticsDashboard = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <Badge variant="outline" className="font-mono">
-                                Call #{airtableRecords.length - index}
+                                Call #{calls.length - index}
                               </Badge>
                               <Badge 
                                 variant="secondary" 
                                 className="bg-primary/10 text-primary border-primary/20"
                               >
-                                {callType}
+                                {eventType}
                               </Badge>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -204,7 +204,7 @@ const CallAnalyticsDashboard = () => {
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {totalTime} minutes
+                                {durationMinutes} minutes
                               </span>
                             </div>
                           </div>

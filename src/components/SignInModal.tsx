@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Mail, ArrowLeft } from "lucide-react";
+import { X, Mail, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +25,8 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showOTPVerification, setShowOTPVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [otpValue, setOtpValue] = useState("");
@@ -318,15 +320,28 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password" className="text-foreground">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={signInPassword}
-                      onChange={(e) => setSignInPassword(e.target.value)}
-                      className="bg-background border-border focus:border-primary"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signin-password"
+                        type={showSignInPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={signInPassword}
+                        onChange={(e) => setSignInPassword(e.target.value)}
+                        className="bg-background border-border focus:border-primary pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignInPassword(!showSignInPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showSignInPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                     <div className="flex justify-end">
                       <Button
                         type="button"
@@ -376,16 +391,29 @@ export const SignInModal = ({ open, onOpenChange, onSuccess, initialTab = 'signi
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password" className="text-foreground">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={signUpPassword}
-                      onChange={(e) => setSignUpPassword(e.target.value)}
-                      className="bg-background border-border focus:border-primary"
-                      required
-                      minLength={6}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        type={showSignUpPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={signUpPassword}
+                        onChange={(e) => setSignUpPassword(e.target.value)}
+                        className="bg-background border-border focus:border-primary pr-10"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showSignUpPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <Button
                     type="submit"

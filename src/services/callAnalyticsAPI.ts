@@ -1,40 +1,28 @@
 // ============================================
-// AIRTABLE APIs
+// MONGODB CALL APIs
 // ============================================
 
 /**
- * Get Airtable records for a user by email
+ * Get MongoDB calls for the authenticated user
+ * Returns calls from MongoDB filtered by user's email
  */
-export const getAirtableRecordsByEmail = async (email: string) => {
-  const response = await apiClient.get(`/api/airtable/by-email/${encodeURIComponent(email)}`);
+export const getMongoDBCalls = async () => {
+  const response = await apiClient.get('/api/my-calls');
   return response.data;
 };
 
-/**
- * Get all Airtable records for a user by email (with pagination support)
- */
-export const getAllAirtableRecordsByEmail = async (email: string) => {
-  const response = await apiClient.get(`/api/airtable/by-email/${encodeURIComponent(email)}?all=true`);
-  return response.data;
-};
-
-
-// Airtable record type for dashboard
-// Airtable API returns: { id: "recXXX", fields: { Name: "...", EMAIL: "...", ... }, createdTime: "..." }
-export interface AirtableCallRecord {
-  id: string;
-  fields: {
-    Name?: string;
-    EMAIL?: string;
-    PHONE?: string;
-    QUANTITY?: string | number;
-    CallType?: string;
-    total_time?: string | number;
-    Summary?: string;
-    call_analyzed?: string;
-    [key: string]: any;
-  };
-  createdTime?: string;
+// MongoDB call record type
+export interface MongoDBCallRecord {
+  _id: string;
+  callId: string;
+  userId?: string;
+  email: string;
+  phoneNumber: string;
+  summary: string;
+  transcript: string;
+  durationSeconds: number;
+  eventType?: string;
+  createdAt: string;
 }
 /**
  * Call Analytics API Service

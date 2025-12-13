@@ -257,22 +257,32 @@ const CustomerDashboard = () => {
 
               {/* Call Analytics - Full Width */}
               <div className="p-6 rounded-xl border border-dashed border-blue-500/40 bg-gradient-to-r from-blue-500/10 to-transparent">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
-                      📊 Call Analytics Dashboard
+                      📊 Call Analytics
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-muted-foreground">
                       View AI-powered call insights, detailed transcripts, and conversation analytics
                     </p>
                   </div>
-                  <Button 
-                    onClick={() => navigate('/call-analytics')}
-                    size="lg"
-                    className="bg-blue-600 text-white hover:bg-blue-700 px-8"
-                  >
-                    View Call Analytics
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={() => navigate('/my-calls')}
+                      size="lg"
+                      className="bg-blue-600 text-white hover:bg-blue-700 px-6"
+                    >
+                      MongoDB Calls
+                    </Button>
+                    <Button 
+                      onClick={() => navigate('/call-analytics')}
+                      size="lg"
+                      variant="outline"
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50 px-6"
+                    >
+                      Call Analytics
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Quick Stats Preview */}

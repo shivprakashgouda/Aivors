@@ -61,8 +61,8 @@ router.post('/retell', async (req, res) => {
       });
     }
 
-    // Resolve user email from phoneNumber
-    // Try exact match first, then normalized (remove spaces, dashes, parentheses)
+    // Resolve user by phoneNumber (normalized matching)
+    // Normalize: remove spaces, dashes, parentheses, compare last 10 digits
     const normalizedPhone = normalizedPhoneNumber.replace(/[\s\-()]/g, '');
     
     let user = await User.findOne({ 
@@ -72,9 +72,9 @@ router.post('/retell', async (req, res) => {
         { phoneNumber: normalizedPhoneNumber },
         { phoneNumber: normalizedPhone }
       ]
-    }).select('email');
+    }).select('_id email');
 
-    // If still not found, try partial match on last 10 digits
+    // If still not found, try partial match on last 10 digits as fallback
     if (!user && normalizedPhone.length >= 10) {
       const last10Digits = normalizedPhone.slice(-10);
       user = await User.findOne({
@@ -82,7 +82,7 @@ router.post('/retell', async (req, res) => {
           { 'business.phoneNumber': { $regex: last10Digits + '$' } },
           { phoneNumber: { $regex: last10Digits + '$' } }
         ]
-      }).select('email');
+      }).select('_id email');
     }
 
     if (!user) {
@@ -98,11 +98,12 @@ router.post('/retell', async (req, res) => {
       });
     }
 
-    console.log(`✅ [RETELL WEBHOOK] User found: ${user.email}`);
+    console.log(`✅ [RETELL WEBHOOK] User found: ${user.email} (ID: ${user._id})`);
 
-    // Create call record
+    // Create call record with both userId and email
     const call = await Call.create({
       callId: normalizedCallId,
+      userId: user._id.toString(),
       email: user.email,
       phoneNumber: normalizedPhoneNumber,
       summary: summary || '',
@@ -114,6 +115,7 @@ router.post('/retell', async (req, res) => {
 
     console.log(`✅ [RETELL WEBHOOK] Call saved to MongoDB:`);
     console.log(`   ID: ${call._id}`);
+    console.log(`   UserId: ${call.userId}`);
     console.log(`   Email: ${call.email}`);
     console.log(`   CallId: ${call.callId}\n`);
 
