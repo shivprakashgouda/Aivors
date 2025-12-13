@@ -49,6 +49,10 @@ const dashboardStatsRoutes = require('./routes/dashboardRoutes');
 // Airtable integration routes
 const airtableRoutes = require('./routes/airtable');
 
+// Retell webhook and my-calls routes
+const retellWebhookRoutes = require('./routes/retellWebhook');
+const myCallsRoutes = require('./routes/myCalls');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -138,6 +142,7 @@ app.use((req, res, next) => {
   // - /api/dashboard: Protected by authGuard
   // - Stripe endpoints: Already protected by authGuard, CSRF adds unnecessary friction
   const ignored = req.path.startsWith('/api/webhook') 
+    || req.path.startsWith('/webhook') // Retell webhook
     || req.path === '/api/health'
     || req.path === '/api/auth/refresh'
     || req.path === '/api/auth/logout'
@@ -198,6 +203,10 @@ app.use('/api/dashboard', dashboardRoutes);
 // Mount Airtable routes
 app.use('/api/airtable', airtableRoutes);
 app.use('/api/webhook/airtable', airtableRoutes);
+
+// Mount Retell webhook and my-calls routes
+app.use('/webhook', retellWebhookRoutes); // POST /webhook/retell
+app.use('/api/my-calls', myCallsRoutes);   // GET /api/my-calls
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

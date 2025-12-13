@@ -24,8 +24,9 @@ const CallAnalyticsDashboard = () => {
     setLoading(true);
     try {
       const response = await callAnalyticsAPI.getAirtableRecordsByEmail(user.email);
-      if (response.success && Array.isArray(response.records)) {
-        setAirtableRecords(response.records);
+      // Backend returns: { success: true, data: { records: [...], offset: null, email: '...' } }
+      if (response.success && response.data && Array.isArray(response.data.records)) {
+        setAirtableRecords(response.data.records);
       } else {
         setAirtableRecords([]);
       }
@@ -68,7 +69,7 @@ const CallAnalyticsDashboard = () => {
   if (!airtableRecords.length) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation onSignInClick={() => {}} onSignUpClick={() => {}} onBookDemoClick={() => {}} />
+        <Navigation onSignInClick={() => { }} onSignUpClick={() => { }} onBookDemoClick={() => { }} />
         <div className="pt-32 pb-20 px-6">
           <div className="container mx-auto max-w-7xl text-center">
             <h2 className="text-2xl font-bold mb-4">No Airtable Data</h2>
@@ -82,7 +83,7 @@ const CallAnalyticsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation onSignInClick={() => {}} onSignUpClick={() => {}} onBookDemoClick={() => {}} />
+      <Navigation onSignInClick={() => { }} onSignUpClick={() => { }} onBookDemoClick={() => { }} />
       <section className="pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-7xl">
           <div className="flex items-center justify-between mb-8">
@@ -120,15 +121,15 @@ const CallAnalyticsDashboard = () => {
                   <tbody className="divide-y divide-border">
                     {airtableRecords.map((rec) => (
                       <tr key={rec.id} className="hover:bg-muted/50 transition-colors">
-                        <td className="px-3 py-2 whitespace-nowrap">{rec.Name}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec.EMAIL}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec.PHONE}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec["A PRODUCT"]}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec["# QUANTITY"]}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec["A CALLTYPE"]}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec["A TOTAL_Time"]}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec.Summery}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{rec.call_analyzed}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.Name || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.EMAIL || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.PHONE || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.PRODUCT || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.QUANTITY || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.CallType || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.total_time || '-'}</td>
+                        <td className="px-3 py-2 max-w-xs truncate">{rec.fields.Summary || '-'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{rec.fields.call_analyzed || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

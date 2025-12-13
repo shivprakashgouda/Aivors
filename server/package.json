@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "setup-db": "node setup-mongodb.js",
+    "test-webhook": "node test-retell-webhook.js"
   },
   "keywords": [
     "stripe",

@@ -1,63 +1,66 @@
 const mongoose = require('mongoose');
 
 /**
- * Call Model
+ * Call Model - Updated for email-based user identification
  * Stores call analytics data from Retell AI
+ * Email is the PRIMARY user identifier
  */
 const callSchema = new mongoose.Schema({
   callId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
-  userId: {
+  email: {
     type: String,
     required: true,
-    ref: 'User'
+    index: true,
+    lowercase: true,
+    trim: true
   },
-  // Call details
   phoneNumber: {
     type: String,
-    required: true
-  },
-  durationSeconds: {
-    type: Number,
     required: true,
-    min: 0
-  },
-  durationMinutes: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  // AI Analysis
-  transcript: {
-    type: String,
-    default: ''
+    trim: true
   },
   summary: {
     type: String,
     default: ''
   },
-  // Metadata from Retell AI
+  transcript: {
+    type: String,
+    default: ''
+  },
+  durationSeconds: {
+    type: Number,
+    default: 0
+  },
   eventType: {
     type: String,
-    default: 'call_analyze'
+    default: 'call_completed'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  // Legacy fields for backward compatibility (optional)
+  userId: {
+    type: String,
+    ref: 'User'
+  },
+  durationMinutes: {
+    type: Number
   },
   metadata: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
   },
-  // Call status
   status: {
     type: String,
     enum: ['completed', 'failed', 'processing'],
     default: 'completed'
-  },
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now
   },
   callStartTime: {
     type: Date
@@ -66,8 +69,14 @@ const callSchema = new mongoose.Schema({
     type: Date
   }
 }, {
-  timestamps: true
+  timestamps: false // Using createdAt manually
 });
+
+// Compound index for efficient queries by email + date
+callSchema.index({ email: 1, createdAt: -1 });
+
+// Prevent duplicate callId inserts
+callSchema.index({ callId: 1 }, { unique: true });
 
 /**
  * Static method: Check if call already exists (prevent duplicates)
@@ -78,14 +87,15 @@ callSchema.statics.callExists = async function(callId) {
 };
 
 /**
- * Static method: Get total minutes used by user
+ * Static method: Get total minutes used by email
  */
-callSchema.statics.getTotalMinutesByUser = async function(userId) {
+callSchema.statics.getTotalMinutesByEmail = async function(email) {
   const result = await this.aggregate([
-    { $match: { userId } },
-    { $group: { _id: null, totalMinutes: { $sum: '$durationMinutes' } } }
+    { $match: { email: email.toLowerCase() } },
+    { $group: { _id: null, totalSeconds: { $sum: '$durationSeconds' } } }
   ]);
-  return result.length > 0 ? result[0].totalMinutes : 0;
+  const totalSeconds = result.length > 0 ? result[0].totalSeconds : 0;
+  return Math.ceil(totalSeconds / 60);
 };
 
 /**

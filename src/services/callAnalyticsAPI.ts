@@ -18,19 +18,23 @@ export const getAllAirtableRecordsByEmail = async (email: string) => {
   return response.data;
 };
 
+
 // Airtable record type for dashboard
+// Airtable API returns: { id: "recXXX", fields: { Name: "...", EMAIL: "...", ... }, createdTime: "..." }
 export interface AirtableCallRecord {
   id: string;
-  Name: string;
-  EMAIL: string;
-  PHONE: string;
-  "A PRODUCT": string;
-  "# QUANTITY": string | number;
-  "A CALLTYPE": string;
-  "A TOTAL_Time": string | number;
-  Summery: string;
-  call_analyzed: string;
-  [key: string]: any;
+  fields: {
+    Name?: string;
+    EMAIL?: string;
+    PHONE?: string;
+    QUANTITY?: string | number;
+    CallType?: string;
+    total_time?: string | number;
+    Summary?: string;
+    call_analyzed?: string;
+    [key: string]: any;
+  };
+  createdTime?: string;
 }
 /**
  * Call Analytics API Service

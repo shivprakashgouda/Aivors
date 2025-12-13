@@ -13,6 +13,7 @@ import BusinessDashboard from "./pages/BusinessDashboard";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import AdminLogin from "./pages/AdminLogin";
 import ResetPassword from "./pages/ResetPassword";
+import MyCallsPage from "./pages/MyCallsPage";
 import ForgotPasswordStandalone from "./pages/ForgotPasswordStandalone";
 import ResetPasswordStandalone from "./pages/ResetPasswordStandalone";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/dashboard" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
             <Route path="/call-analytics" element={<PrivateRoute><CallAnalyticsDashboard /></PrivateRoute>} />
+            <Route path="/my-calls" element={<PrivateRoute><MyCallsPage /></PrivateRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/business-dashboard" element={<PrivateRoute><BusinessDashboard /></PrivateRoute>} />

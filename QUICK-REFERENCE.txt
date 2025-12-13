@@ -1,0 +1,187 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🎯 RETELL WEBHOOK - QUICK REFERENCE CARD                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+📋 BEFORE DEPLOYMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  Setup MongoDB Indexes:
+    cd server && npm run setup-db
+
+2️⃣  Test Webhook Locally:
+    cd server && npm run test-webhook
+
+3️⃣  Verify Environment Variables:
+    ✓ MONGODB_URI
+    ✓ JWT_SECRET
+    ✓ CLIENT_URL
+
+
+🚀 DEPLOYMENT COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Push to GitHub (Render auto-deploys):
+git add .
+git commit -m "Add Retell webhook system"
+git push origin main
+
+Check Render Logs:
+✅ MongoDB Connected
+✅ Call indexes synchronized
+🚀 Server running
+
+
+🔗 API ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+POST /webhook/retell
+    → Receives Retell AI call data
+    → Public (no auth)
+    → Returns 200 always (prevents retry storms)
+
+GET /api/my-calls
+    → Returns authenticated user's calls
+    → Requires JWT token
+    → Sorted by latest first
+
+
+📱 FRONTEND ROUTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/my-calls
+    → Shows call history table
+    → Stats: total calls, duration, recent
+    → Click row to view full transcript
+
+
+🧪 TEST COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Test Webhook (Local):
+curl -X POST http://localhost:3001/webhook/retell \
+  -H "Content-Type: application/json" \
+  -d '{"callId":"test_123","phoneNumber":"+14095551234","summary":"Test"}'
+
+Test Webhook (Production):
+curl -X POST https://your-app.onrender.com/webhook/retell \
+  -H "Content-Type: application/json" \
+  -d '{"callId":"prod_123","phoneNumber":"+14095551234","summary":"Test"}'
+
+Check MongoDB:
+mongosh "your-connection-string"
+use aivors
+db.calls.find().pretty()
+
+
+⚙️ NPM SCRIPTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+npm start          → Start server
+npm run setup-db   → Setup MongoDB indexes
+npm run test-webhook → Test webhook locally
+npm run dev        → Development mode (nodemon)
+
+
+🔧 RETELL AI CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Webhook URL:
+https://your-backend.onrender.com/webhook/retell
+
+Events to Subscribe:
+✓ call_completed
+✓ call_analyzed (optional)
+
+
+🗄️ MONGODB ATLAS SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Network Access:
+Add IP: 0.0.0.0/0
+
+Database User:
+Role: readWrite
+
+Connection String:
+mongodb+srv://<user>:<pass>@cluster.mongodb.net/<db>
+
+
+📊 MONGODB INDEXES (Auto-Created)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ callId (unique)           → Prevent duplicates
+✓ email                     → Fast user lookups
+✓ createdAt                 → Sort by date
+✓ { email, createdAt }      → Optimized queries
+
+
+🐛 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"No user found for phone"
+→ Add phone to user in MongoDB:
+  db.users.updateOne(
+    { email: "user@example.com" },
+    { $set: { "business.phoneNumber": "+14095551234" } }
+  )
+
+"Network timeout"
+→ Add 0.0.0.0/0 to MongoDB Atlas Network Access
+
+"Calls not showing"
+→ Check email matches between user and calls:
+  db.calls.find({ email: "actual-user@example.com" })
+
+
+📁 FILES CREATED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Backend:
+✓ server/routes/retellWebhook.js    (Webhook handler)
+✓ server/routes/myCalls.js          (API endpoint)
+✓ server/models/Call.js             (MongoDB schema)
+✓ server/setup-mongodb.js           (DB setup script)
+✓ server/test-retell-webhook.js     (Test script)
+✓ server/config/db.js               (Auto-index sync)
+
+Frontend:
+✓ src/pages/MyCallsPage.tsx         (React component)
+✓ src/App.tsx                       (Route added)
+
+Documentation:
+✓ RETELL-WEBHOOK-SETUP.md           (Full implementation)
+✓ docs/MONGODB-DEPLOYMENT-GUIDE.md  (MongoDB guide)
+✓ DEPLOY-CHECKLIST.md               (Quick deploy)
+✓ QUICK-REFERENCE.txt               (This file)
+
+
+✅ DEPLOYMENT READINESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ MongoDB schema with email as primary identifier
+✓ Webhook endpoint with phone-to-email resolution
+✓ Idempotency (duplicate prevention)
+✓ Authenticated API for user calls
+✓ React frontend with table and modal
+✓ Automatic index creation on startup
+✓ Test scripts included
+✓ Production error handling
+✓ CSRF exclusion for webhook
+✓ Comprehensive documentation
+
+
+🎉 READY TO DEPLOY!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. npm run setup-db          (Setup MongoDB)
+2. npm run test-webhook       (Test locally)
+3. git push origin main       (Deploy to Render)
+4. Configure Retell webhook   (Add webhook URL)
+5. Visit /my-calls            (View calls)
+
+
+📞 SUPPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Email: info@restaurant-ai.com
+Phone: (409) 960-2907
