@@ -482,10 +482,17 @@ router.post('/request-reset', async (req, res) => {
     // Hash the token before storing (security best practice)
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     
-    // Set token and expiry (1 hour from now)
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    await user.save();
+    // FIX: Use findByIdAndUpdate to update ONLY reset token fields
+    // This avoids triggering full document validation which could fail
+    // if user has legacy status values like 'paid' that aren't in the schema enum
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+      },
+      { runValidators: false } // Skip validation on other fields
+    );
 
     console.log(`🔐 Password reset requested for: ${email}`);
 
@@ -568,11 +575,18 @@ router.post('/reset-password', async (req, res) => {
     // Hash new password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Update password and clear reset fields
-    user.passwordHash = passwordHash;
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
-    await user.save();
+    // FIX: Use findByIdAndUpdate to update ONLY password-related fields
+    // This avoids triggering full document validation which could fail
+    // if user has legacy status values that aren't in the schema enum
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        passwordHash: passwordHash,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+      { runValidators: false } // Skip validation on other fields
+    );
 
     console.log(`✅ Password reset successful for: ${user.email}`);
 

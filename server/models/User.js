@@ -51,9 +51,11 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user',
   },
+  // User account status - represents account state (NOT subscription/payment state)
+  // DO NOT use 'paid' here - payment status belongs in subscription.status
   status: {
     type: String,
-    enum: ['pending_payment', 'active', 'inactive', 'cancelled'],
+    enum: ['pending_payment', 'active', 'inactive', 'cancelled', 'blocked'],
     default: 'pending_payment',
   },
   subscription: {
@@ -61,9 +63,11 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: 'Free',
     },
+    // Subscription payment status - can include Stripe statuses
+    // 'paid' is a valid Stripe status that may come from webhooks
     status: {
       type: String,
-      enum: ['active', 'past_due', 'cancelled', 'inactive'],
+      enum: ['active', 'past_due', 'cancelled', 'inactive', 'paid', 'trialing', 'unpaid', 'incomplete'],
       default: 'inactive',
     },
     minutesPurchased: {

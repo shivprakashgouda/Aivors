@@ -497,7 +497,22 @@ app.post('/api/webhook', async (req, res) => {
         const user = await User.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
         
         if (user) {
-          user.subscription.status = subscription.status;
+          // Map Stripe subscription status to valid schema values
+          // Stripe statuses: active, past_due, canceled, unpaid, trialing, incomplete, incomplete_expired, paused
+          // Schema allows: active, past_due, cancelled, inactive, paid, trialing, unpaid, incomplete
+          const stripeStatus = subscription.status;
+          const statusMap = {
+            'active': 'active',
+            'past_due': 'past_due',
+            'canceled': 'cancelled',      // Note: Stripe uses 'canceled', we use 'cancelled'
+            'cancelled': 'cancelled',
+            'unpaid': 'unpaid',
+            'trialing': 'trialing',
+            'incomplete': 'incomplete',
+            'incomplete_expired': 'inactive',
+            'paused': 'inactive',
+          };
+          user.subscription.status = statusMap[stripeStatus] || 'inactive';
           await user.save();
 
           await AuditLog.create({
@@ -506,6 +521,7 @@ app.post('/api/webhook', async (req, res) => {
             payload: { 
               subscriptionId: subscription.id,
               status: subscription.status,
+              mappedStatus: user.subscription.status,
             },
           });
 
